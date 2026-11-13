@@ -146,6 +146,7 @@ textarea{background:var(--bg);border:1px solid var(--line);border-radius:6px;pad
 .pill.mute{background:var(--accent-soft);color:var(--accent)}
 .tablewrap{overflow-x:auto;max-height:420px;overflow-y:auto;border:1px solid var(--line);border-radius:6px}
 table{border-collapse:collapse;width:100%;min-width:560px}
+#finder{min-width:820px}
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);position:sticky;top:0;background:var(--panel)}
 tr.cur td{background:var(--accent-soft)}
@@ -179,13 +180,13 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
         <p class="info" id="caseInfo"></p>
         <div class="row">
           <label class="field"><span>Grid</span>
-            <select id="pitchSel"><option value="0.25">0.25 in</option><option value="0.5">0.5 in</option><option value="1">1 in</option></select></label>
+            <select id="pitchSel"></select></label>
           <label class="field"><span>Clearance</span>
-            <select id="clearSel"><option value="0">None</option><option value="0.25">0.25 in</option><option value="0.5">0.5 in</option></select></label>
+            <select id="clearSel"></select></label>
         </div>
         <div class="row" style="justify-content:space-between">
           <span class="info">Units</span>
-          <div class="seg" role="group" aria-label="Units"><button id="uIn" aria-pressed="true">inches</button><button id="uMm" aria-pressed="false">mm</button></div>
+          <div class="seg" role="group" aria-label="Units (imperial: in, lb. metric: mm, kg)"><button id="uIn" aria-pressed="true">Imperial</button><button id="uMm" aria-pressed="false">Metric</button></div>
         </div>
       </section>
 
@@ -226,10 +227,11 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
       <section class="card" id="wtCard">
         <h2>Weight</h2>
         <div class="row">
-          <label class="field"><span id="cwLbl">Empty case</span><input type="number" id="caseWt" min="0" step="any" placeholder="enter weight"></label>
+          <label class="field"><span id="cwLbl">Empty case</span><input type="number" id="caseWt" min="0" step="any" placeholder="Pelican weight"></label>
           <label class="field"><span>Weight limit</span><select id="limSel"></select></label>
           <label class="field"><span id="limLbl">Custom limit</span><input type="number" id="limIn" min="0" step="any" placeholder="none"></label>
         </div>
+        <p class="hint" id="cwNote" style="margin:0"></p>
         <div id="wtOut"></div>
       </section>
 
@@ -268,19 +270,27 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
           <select id="libCat" aria-label="Filter by category" style="flex:1 1 140px"></select>
         </div>
         <div class="grp">
-          <div class="seg" role="group" aria-label="Units"><button id="uIn2" aria-pressed="true">inches</button><button id="uMm2" aria-pressed="false">mm</button></div>
+          <div class="seg" role="group" aria-label="Units"><button id="uIn2" aria-pressed="true">Imperial</button><button id="uMm2" aria-pressed="false">Metric</button></div>
           <button class="btn primary" id="libNew">New item</button>
-          <button class="btn" id="libCopy">Copy library</button>
+          <button class="btn" id="libExp">Export CSV</button>
+          <button class="btn" id="libCopy">Copy for Excel</button>
           <button class="btn" id="libImp">Import</button>
         </div>
       </div>
-      <div id="libImpBox" hidden style="display:flex;flex-direction:column;gap:8px">
-        <textarea id="libImpTxt" rows="5" placeholder="Paste library JSON copied with Copy library" aria-label="Library JSON"></textarea>
-        <div class="row"><button class="btn primary" id="libImpGo">Import items</button><span class="hint" id="libImpMsg"></span></div>
+      <div id="libImpBox" hidden style="display:flex;flex-direction:column;gap:10px">
+        <p class="hint" style="margin:0">Import a CSV exported from this page or built in Excel or Sheets. The first row must be headings: Name, Category, Length, Width, Height, Weight, Stackable, Notes. Put units in the headings, like Length (mm) or Weight (kg), otherwise your current units are assumed. You can also paste rows copied from a spreadsheet.</p>
+        <div class="row"><input type="file" id="libFile" accept=".csv,.tsv,.txt,text/csv,text/plain" aria-label="Choose a CSV file"></div>
+        <textarea id="libImpTxt" rows="5" placeholder="Or paste CSV or spreadsheet rows here" aria-label="CSV text"></textarea>
+        <div class="row">
+          <label class="check"><input type="radio" name="impMode" value="merge" checked> Add new, update matching names</label>
+          <label class="check"><input type="radio" name="impMode" value="replace"> Replace whole library</label>
+        </div>
+        <div class="row"><button class="btn primary" id="libImpGo">Import items</button><span class="hint" id="libImpMsg" role="status"></span></div>
       </div>
+      <p class="hint" id="libMsg" role="status" style="margin:0"></p>
       <p class="info" id="libSum"></p>
       <div class="tablewrap" style="max-height:none"><table id="libTable" style="min-width:1040px"></table></div>
-      <p class="hint">The library is saved in this browser only. Use Copy library to back it up or move it to another device. Sizes are the real L × W × H of each item. Add to case puts a copy in the planner.</p>
+      <p class="hint">The library is saved in this browser only. Export CSV to back it up or move it to another device, and open it in Excel or Google Sheets to edit in bulk. Sizes are the real L × W × H of each item. Add to case puts a copy in the planner.</p>
       <datalist id="catList"></datalist>
     </div>
   </section>
@@ -291,6 +301,8 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
 <script>
 (function(){
 "use strict";
+/* Empty case weights in kg, no foam, from Pelican published specs */
+var CASEWT={"1485": 2.1, "1505": 2.63, "1505G": 2.63, "1506": 2.4, "1507": 2.4, "1525": 2.7, "1535": 3.94, "1535L": 3.94, "1555": 3.3, "1557": 3.0, "1595": 6.17, "1605": 4.2, "1615": 6.4, "1510": 5.44, "1550": 4.8, "1560": 7.71, "1600": 5.9, "1610": 9.1, "1650": 10.9, "iM2275": 3.63, "iM2500": 5.03, "iM2620": 5.67, "iM2720": 7.62, "iM2950": 9.43};
 var CASES=[
  ['Air','1485',17.8,10.2,6.2],['Air','1505',18.3,13.3,5.5],['Air','1505G',18.3,13.3,5.5],['Air','1506',18.7,9.4,7.8],['Air','1507',15.2,11.4,8.5],
  ['Air','1525',20.5,11.3,6.8],['Air','1535',20.4,11.2,7.2],['Air','1535L',20.4,11.2,7.2],['Air','1555',23.0,12.8,7.5],['Air','1557',17.3,13.0,9.8],
@@ -298,7 +310,7 @@ var CASES=[
  ['Protector','1510',19.8,11.0,7.6],['Protector','1550',18.6,14.2,7.7],['Protector','1560',19.9,15.0,9.0],['Protector','1600',21.5,16.5,8.0],
  ['Protector','1610',21.8,16.7,10.6],['Protector','1650',28.6,17.5,10.7],
  ['Storm iM','iM2275',14.1,13.2,9.9],['Storm iM','iM2500',20.5,11.5,7.2],['Storm iM','iM2620',20.0,14.0,10.0],['Storm iM','iM2720',22.0,17.0,10.0],['Storm iM','iM2950',29.0,18.0,10.5]
-].map(function(a){return {fam:a[0],id:a[1],L:a[2],W:a[3],D:a[4]}});
+].map(function(a){return {fam:a[0],id:a[1],L:a[2],W:a[3],D:a[4],wt:CASEWT[a[1]]}});
 var PRESETS=[
  ['Mirrorless body with cage',6.5,5.0,5.5,1.2],['Zoom lens 70-200',8.5,3.8,3.8,1.5],['Standard zoom 24-70',5.5,3.8,3.8,0.9],['Prime lens',3.5,3.2,3.2,0.5],
  ['On-camera monitor',7.5,4.8,1.5,0.5],['V-mount battery',5.5,3.5,2.8,0.7],['Wireless mic kit',6.0,4.5,2.0,0.4],['Shotgun mic and blimp',12.0,3.5,3.5,0.8],
@@ -316,6 +328,8 @@ function defaults(){
     h:new Set(),v:new Set(),anchor:{},sel:null,onlyFit:true};
 }
 var S=load()||defaults();
+if(S.caseWtCustom===undefined)S.caseWtCustom=!!S.caseWt;
+if(!S.caseWtCustom)S.caseWt=caseById(S.caseId).wt;
 if(!S.autoDone){S.autoDone=true;autoLayout()}
 
 function load(){
@@ -459,11 +473,21 @@ function runs(G){
 
 /* ---------- formatting ---------- */
 function r1(v){return +v.toFixed(1)}
-function disp(v){return S.unit==='mm'?Math.round(v*MM):+v.toFixed(2)}
+function disp(v){return S.unit==='mm'?+(v*MM).toFixed(1):+v.toFixed(2)}
 function undisp(x){return S.unit==='mm'?x/MM:x}
 function wdisp(kg){return S.unit==='in'?+(kg*LB).toFixed(2):+kg.toFixed(2)}
 function wundisp(x){return S.unit==='in'?x/LB:x}
-function fW(kg){return S.unit==='in'?(kg*LB).toFixed(1)+' lb':(+kg.toFixed(2))+' kg'}
+function fW(kg){return S.unit==='in'?(kg*LB).toFixed(1)+' lb':kg.toFixed(2)+' kg'}
+function fSq(a){return S.unit==='mm'?Math.round(a*MM*MM/100)+' cm²':r1(a)+' sq in'}
+function fCase(c){return S.unit==='mm'?Math.round(c.L*MM)+' × '+Math.round(c.W*MM)+' × '+Math.round(c.D*MM)+' mm':c.L+' × '+c.W+' × '+c.D+' in'}
+var PITCHES={in:[[.25,'0.25 in'],[.5,'0.5 in'],[1,'1 in']],mm:[[5/MM,'5 mm'],[10/MM,'10 mm'],[25/MM,'25 mm']]};
+var CLEARS={in:[[0,'None'],[.25,'0.25 in'],[.5,'0.5 in']],mm:[[0,'None'],[5/MM,'5 mm'],[10/MM,'10 mm']]};
+function fPitch(v){return S.unit==='mm'?(+(v*MM).toFixed(1))+' mm':(+v.toFixed(3))+' in'}
+function fillPreset(sel,list,cur){
+  var idx=-1;list.forEach(function(q,i){if(Math.abs(q[0]-cur)<1e-6)idx=i});
+  var h=list.map(function(q,i){return '<option value="'+i+'">'+q[1]+'</option>'}).join('');
+  if(idx<0)h+='<option value="cur">'+fPitch(cur)+' (current)</option>';
+  sel.innerHTML=h;sel.value=idx<0?'cur':String(idx)}
 function fLen(v){return S.unit==='mm'?Math.round(v*MM)+' mm':r1(v)+' in'}
 function fSize(w,h){return S.unit==='mm'?Math.round(w*MM)+'×'+Math.round(h*MM)+' mm':r1(w)+'×'+r1(h)+' in'}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -498,7 +522,7 @@ function drawSvg(G,C,A){
   C.list.forEach(function(cp){
     var oc=A.occ[cp.id],W=cp.bw*p,H=cp.bh*p,cx=cp.cc*p,cy=cp.cr*p;
     if(cp.rect){cx=(cp.minc+cp.bw/2)*p;cy=(cp.minr+cp.bh/2)*p}
-    var dims=cp.rect?fSize(W,H):cp.cells*p*p>0?r1(cp.cells*p*p)+' sq in':'';
+    var dims=cp.rect?fSize(W,H):cp.cells*p*p>0?fSq(cp.cells*p*p):'';
     var nst=oc?oc.filter(function(o){return o.stacked}).length:0,stk=nst>1?' · '+nst+' high':'';
     if(nst>1&&cp.rect)for(var si=1;si<Math.min(nst,4);si++)s+='<rect x="'+(cp.minc*p+si*.12)+'" y="'+(cp.minr*p+si*.12)+'" width="'+(W-si*.24)+'" height="'+(H-si*.24)+'" fill="none" stroke="#101413" stroke-opacity=".4" stroke-width=".05" pointer-events="none"/>';
     var head=oc?(oc.length>1?oc[0].inst.name+' +'+(oc.length-1):oc[0].inst.name):'Spare';
@@ -514,7 +538,7 @@ function drawSvg(G,C,A){
   // dimension text
   s+='<text class="dimtxt" x="'+(c.L/2)+'" y="-.45" text-anchor="middle">'+fLen(c.L)+' interior length</text>';
   s+='<text class="dimtxt" transform="translate(-.45 '+(c.W/2)+') rotate(-90)" text-anchor="middle">'+fLen(c.W)+'</text>';
-  s+='<text class="dimtxt" x="'+c.L+'" y="'+(c.W+.7)+'" text-anchor="end">depth '+fLen(c.D)+' · grid '+fLen(p)+'</text>';
+  s+='<text class="dimtxt" x="'+c.L+'" y="'+(c.W+.7)+'" text-anchor="end">depth '+fLen(c.D)+' · grid '+fPitch(p)+'</text>';
   s+='<g id="pv"></g>';
   svg.innerHTML=s;
 }
@@ -648,7 +672,7 @@ function drawSel(G,C,A){
   var ci=C.label[S.sel.r*G.cols+S.sel.c],cp=C.list[ci],oc=A.occ[ci]||[];
   var opts=A.rows.filter(function(o){return o.ci!==ci}).map(function(o){
     return '<option value="'+o.inst.key+'">'+esc(o.inst.name)+(o.ci>=0?' (move from '+C.list[o.ci].letter+')':'')+'</option>'}).join('');
-  el.innerHTML='<p class="info"><b>Compartment '+cp.letter+'</b> · '+(cp.rect?fSize(cp.bw*G.p,cp.bh*G.p):'irregular, '+r1(cp.cells*G.p*G.p)+' sq in')+'</p>'
+  el.innerHTML='<p class="info"><b>Compartment '+cp.letter+'</b> · '+(cp.rect?fSize(cp.bw*G.p,cp.bh*G.p):'irregular, '+fSq(cp.cells*G.p*G.p))+'</p>'
     +(oc.length?'<p class="info">Load '+fW(oc.reduce(function(t,o){return t+(o.inst.item.wt||0)},0))+'</p>':'')+'<div class="occ" style="margin:8px 0">'+(oc.map(function(o){return '<span class="pill mute" style="display:inline-flex;gap:6px;align-items:center">'+esc(o.inst.name)+' <button data-un="'+o.inst.key+'" style="border:0;background:none;cursor:pointer;color:inherit" aria-label="Remove '+esc(o.inst.name)+'">×</button></span>'}).join('')||'<span class="info">Empty</span>')+'</div>'
     +(opts?'<div class="row"><select id="assignSel" aria-label="Gear to put here" style="flex:1 1 160px">'+opts+'</select><button class="btn primary" id="assignBtn">Put here</button></div>':'<p class="info">All gear is already in this compartment.</p>');
 }
@@ -682,14 +706,18 @@ function finderRows(){
 function drawFinder(){
   var rows=finderRows(),only=$('#onlyFit').checked;
   if(only)rows=rows.filter(function(o){return o.st!=='no'});
-  var h='<thead><tr><th>Case</th><th>Interior L × W × D</th><th>Result</th><th>Floor used</th><th>Note</th></tr></thead><tbody>';
+  var h='<thead><tr><th>Case</th><th>Interior L × W × D</th><th>Empty weight</th><th>Result</th><th>Floor used</th><th>Packed weight</th><th>Note</th></tr></thead><tbody>';
+  var gearW=instances().reduce(function(t,x){return t+(x.item.wt||0)},0),lim=S.limit||0;
+  var okRows=rows.filter(function(o){return o.st!=='no'}),light=okRows.length?okRows.slice().sort(function(a,b){return a.c.wt-b.c.wt})[0]:null;
   rows.forEach(function(o){
     var pill=o.st==='fit'?'<span class="pill ok">Fits</span>':o.st==='tight'?'<span class="pill warn">Tight fit</span>':'<span class="pill bad">No</span>';
     if(o.best)pill+=' <span class="pill mute">Smallest</span>';
+    if(light&&o===light)pill+=' <span class="pill mute">Lightest</span>';
+    var packed=gearW+o.c.wt,over=lim&&packed>lim+1e-9;
     h+='<tr class="'+(o.c.id===S.caseId?'cur ':'')+(o.st==='no'?'dim':'')+'"><td><button data-case="'+o.c.id+'">'+o.c.id+'</button> <span class="info">'+o.c.fam+'</span></td>'
-      +'<td class="mono">'+(S.unit==='mm'?Math.round(o.c.L*MM)+' × '+Math.round(o.c.W*MM)+' × '+Math.round(o.c.D*MM)+' mm':o.c.L+' × '+o.c.W+' × '+o.c.D+' in')+'</td><td>'+pill+'</td>'
-      +'<td class="mono">'+(o.st==='no'?'–':o.pct+'%')+'</td><td class="why">'+esc(o.why)+'</td></tr>'});
-  if(!rows.length)h+='<tr><td colspan="5" class="info">No TrekPak case holds this gear with the current grid and clearance. Try less clearance or remove an item.</td></tr>';
+      +'<td class="mono">'+fCase(o.c)+'</td><td class="mono">'+fW(o.c.wt)+'</td><td>'+pill+'</td>'
+      +'<td class="mono">'+(o.st==='no'?'–':o.pct+'%')+'</td><td class="mono">'+(o.st==='no'?'–':fW(packed)+(over?' <span class="pill bad">Over limit</span>':''))+'</td><td class="why">'+esc(o.why)+'</td></tr>'});
+  if(!rows.length)h+='<tr><td colspan="7" class="info">No TrekPak case holds this gear with the current grid and clearance. Try less clearance or remove an item.</td></tr>';
   $('#finder').innerHTML=h+'</tbody>';
 }
 function turnItem(it,act){
@@ -739,7 +767,7 @@ function drawItems(){
       +'<button class="btn sm" data-act="roll" data-id="'+it.id+'" title="Roll onto its side along its length (swap width and height)">Roll</button>'
       +'<button class="btn sm" data-act="pitch" data-id="'+it.id+'" title="Tip end over end (swap length and height)">Tip</button>'
       +'<button class="btn sm'+(it.auto?' on':'')+'" data-act="auto" data-id="'+it.id+'" aria-pressed="'+!!it.auto+'" title="Pick the orientation with the smallest footprint for the case">Auto</button></div>'
-      +'<label class="stk"><input type="checkbox" data-f="stack"'+(it.stack?' checked':'')+'> Stackable</label><span class="ostat mono">'+fSize(e.l,e.w)+', '+fLen(e.h).replace(' in','')+' high'+(e.h>D+1e-6?' !':'')+'</span></div><div class="libr"><button class="btn sm" data-act="savelib" data-id="'+it.id+'" title="Keep this item in your gear library">'+(it.libId&&LIB.some(function(l){return l.id===it.libId})?'Update library':'Save to library')+'</button></div></div>'}).join('')
+      +'<label class="stk"><input type="checkbox" data-f="stack"'+(it.stack?' checked':'')+'> Stackable</label><span class="ostat mono">'+fSize(e.l,e.w)+' footprint, '+fLen(e.h)+' high'+(e.h>D+1e-6?' !':'')+'</span></div><div class="libr"><button class="btn sm" data-act="savelib" data-id="'+it.id+'" title="Keep this item in your gear library">'+(it.libId&&LIB.some(function(l){return l.id===it.libId})?'Update library':'Save to library')+'</button></div></div>'}).join('')
     ||'<p class="info">No gear yet. Add an item below.</p>';
   var n=instances().length;$('#gearCount').textContent='· '+n+' piece'+(n===1?'':'s');
 }
@@ -761,6 +789,7 @@ function drawWeight(G,C,A){
     return '<div class="hv"><span class="n">'+esc(r.name)+'</span><span class="t"><i style="width:'+(r.wt/mx*100)+'%"></i></span><span class="mono">'+fW(r.wt)+'</span></div>'}).join('')+'</div>';
   var notes=[];
   if(!cw)notes.push('Enter the empty weight of your case for a true total.');
+  var cc=G.c;$('#cwNote').innerHTML=S.caseWtCustom?'Using your own case weight. Pelican lists '+fW(cc.wt)+' for the '+cc.id+' with no foam. <button class="btn sm" data-reset="1">Use Pelican weight</button>':'Empty weight of the '+cc.id+' from Pelican\'s published specs, no foam. TrekPak dividers are not included. Type a weight to override it.';
   if(missing)notes.push(missing+' item'+(missing>1?'s have':' has')+' no weight entered.');
   if(notes.length)h+='<p class="hint" style="margin-top:10px">'+notes.join(' ')+'</p>';
   $('#wtOut').innerHTML=h;
@@ -768,20 +797,20 @@ function drawWeight(G,C,A){
 function drawControls(){
   var fams={};CASES.forEach(function(c){(fams[c.fam]=fams[c.fam]||[]).push(c)});
   $('#caseSel').innerHTML=Object.keys(fams).map(function(f){return '<optgroup label="'+f+'">'+fams[f].map(function(c){
-    return '<option value="'+c.id+'"'+(c.id===S.caseId?' selected':'')+'>'+c.id+' · '+(S.unit==='mm'?Math.round(c.L*MM)+'×'+Math.round(c.W*MM)+'×'+Math.round(c.D*MM)+' mm':c.L+'×'+c.W+'×'+c.D+' in')+'</option>'}).join('')+'</optgroup>'}).join('');
-  $('#pitchSel').value=String(S.pitch);$('#clearSel').value=String(S.clear);
+    return '<option value="'+c.id+'"'+(c.id===S.caseId?' selected':'')+'>'+c.id+' · '+fCase(c).replace(/ × /g,'×')+'</option>'}).join('')+'</optgroup>'}).join('');
+  fillPreset($('#pitchSel'),PITCHES[S.unit],S.pitch);fillPreset($('#clearSel'),CLEARS[S.unit],S.clear);
   ['#uIn','#uIn2'].forEach(function(q){$(q).setAttribute('aria-pressed',S.unit==='in')});['#uMm','#uMm2'].forEach(function(q){$(q).setAttribute('aria-pressed',S.unit==='mm')});
   drawLibSelect();
   $('#onlyFit').checked=S.onlyFit!==false;
   var u=S.unit==='in'?'lb':'kg';$('#cwLbl').textContent='Empty case ('+u+')';$('#limLbl').textContent='Custom limit ('+u+')';
   $('#caseWt').value=S.caseWt?wdisp(S.caseWt):'';$('#limIn').value=S.limit?wdisp(S.limit):'';
-  var presets=[[0,'None'],[7,'Carry-on 7 kg · 15.4 lb'],[10,'Carry-on 10 kg · 22 lb'],[23,'Checked 23 kg · 50.7 lb'],[32,'Heavy 32 kg · 70.5 lb']],cur=presets.some(function(q){return Math.abs(q[0]-(S.limit||0))<.01});
+  var KGS=[[0,'None'],[7,'Carry-on',15.4],[10,'Carry-on',22],[23,'Checked',50.7],[32,'Heavy',70.5]],presets=KGS.map(function(q){return q.length<3?q:[q[0],q[1]+' '+(S.unit==='mm'?q[0]+' kg':q[2]+' lb')]}),cur=presets.some(function(q){return Math.abs(q[0]-(S.limit||0))<.01});
   $('#limSel').innerHTML=presets.map(function(q){return '<option value="'+q[0]+'">'+q[1]+'</option>'}).join('')+'<option value="custom">Custom</option>';
   $('#limSel').value=cur?String(presets.filter(function(q){return Math.abs(q[0]-(S.limit||0))<.01})[0][0]):'custom';
   document.querySelectorAll('[data-mode]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.mode===S.mode)});
 }
 function drawCaseInfo(G){
-  var c=G.c;$('#caseInfo').innerHTML='<b>'+c.id+'</b> ('+c.fam+') interior '+fSize(c.L,c.W)+', '+fLen(c.D)+' deep. Grid is '+G.cols+' × '+G.rows+' cells.';
+  var c=G.c;$('#caseInfo').innerHTML='<b>'+c.id+'</b> ('+c.fam+') interior '+fSize(c.L,c.W)+', '+fLen(c.D)+' deep. Grid is '+G.cols+' × '+G.rows+' cells of '+fPitch(G.p)+'.';
   var hints={draw:'Drag along a grid line to add a divider run. Click a single grid edge to toggle it.',erase:'Drag along a divider to remove it, or click one segment.',move:'Drag a piece of gear to a new spot. Drop stackable gear onto another stackable item to stack it. Hold Shift to pull one item off a stack. Press R while dragging to turn it 90°. Green means it fits, red means it overlaps other gear.',
     assign:'Click a compartment, then choose which gear goes in it.'};
   $('#modeHint').textContent=hints[S.mode];
@@ -864,20 +893,104 @@ $('#libTable').addEventListener('click',function(e){
     if(delArm===del){LIB=LIB.filter(function(i){return i.id!==del});delArm=null;saveLib();renderLibrary();return}
     delArm=del;e.target.textContent='Confirm delete';e.target.classList.add('danger');
     clearTimeout(delTimer);delTimer=setTimeout(function(){delArm=null;if(e.target.isConnected){e.target.textContent='Delete';e.target.classList.remove('danger')}},3000)}});
+/* CSV export / import */
+var CSV_HEAD=['Name','Category','Length','Width','Height','Weight','Stackable','Notes'];
+function csvCell(v,delim){
+  v=String(v==null?'':v);
+  if(/^[=+\-@]/.test(v)&&isNaN(+v))v="'"+v;
+  return (v.indexOf(delim)>=0||/["\r\n]/.test(v))?'"'+v.replace(/"/g,'""')+'"':v}
+function libTable(delim){
+  var lu=S.unit==='in'?'in':'mm',wu=S.unit==='in'?'lb':'kg';
+  var head=['Name','Category','Length ('+lu+')','Width ('+lu+')','Height ('+lu+')','Weight ('+wu+')','Stackable','Notes'];
+  var rows=[head].concat(LIB.map(function(i){return [i.name,i.cat,disp(i.l),disp(i.w),disp(i.h),i.wt?wdisp(i.wt):'',i.stack?'Yes':'No',i.notes||'']}));
+  return rows.map(function(r){return r.map(function(c){return csvCell(c,delim)}).join(delim)}).join('\r\n')+'\r\n'}
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');
+  var first=text.split(/\r?\n/)[0]||'';
+  var delim=[',',';','\t'].map(function(d){return [d,first.split(d).length]}).sort(function(a,b){return b[1]-a[1]})[0][0];
+  var rows=[],row=[],f='',q=false;
+  for(var i=0;i<text.length;i++){var c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"'&&f==='')q=true;
+    else if(c===delim){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f=''}
+    else f+=c}
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  return rows.filter(function(r){return r.some(function(x){return x.trim()!==''})})}
+function colInfo(h){
+  var t=h.toLowerCase().trim(),k=null,unit=null;
+  if(/^(name|item|gear|description)\b/.test(t))k='name';
+  else if(/^categor|^type\b|^group\b/.test(t))k='cat';
+  else if(/^(length|len)\b|^l(\s|\(|$)/.test(t))k='l';
+  else if(/^width\b|^w(\s|\(|$)/.test(t))k='w';
+  else if(/^height\b|^h(\s|\(|$)/.test(t))k='h';
+  else if(/^(weight|wt|mass)\b/.test(t))k='wt';
+  else if(/^stack/.test(t))k='stack';
+  else if(/^note|^comment/.test(t))k='notes';
+  if(k==='l'||k==='w'||k==='h'){var m=t.match(/\b(mm|cm|inches|inch|in)\b|"/);unit=m?(m[1]||'in'):null;if(unit==='inch'||unit==='inches')unit='in'}
+  if(k==='wt'){var m2=t.match(/\b(kg|lbs|lb|oz|g)\b/);unit=m2?m2[1]:null;if(unit==='lbs')unit='lb'}
+  return {k:k,unit:unit}}
+function num(v){v=String(v==null?'':v).trim().replace(/\s/g,'');if(!v)return NaN;if(v.indexOf('.')<0)v=v.replace(',','.');else v=v.replace(/,/g,'');return parseFloat(v)}
+function importCSV(text,mode){
+  var rows=parseCSV(text);if(rows.length<2)return {err:'Nothing to import. Include a heading row and at least one item.'};
+  var cols=rows[0].map(colInfo);
+  if(!cols.some(function(c){return c.k==='name'}))return {err:'The first row needs headings. At least Name, Length, Width and Height are required.'};
+  var need=['l','w','h'].filter(function(k){return !cols.some(function(c){return c.k===k})});
+  if(need.length)return {err:'Missing column'+(need.length>1?'s':'')+': '+need.map(function(k){return {l:'Length',w:'Width',h:'Height'}[k]}).join(', ')+'.'};
+  var dimDef=S.unit==='in'?'in':'mm',wtDef=S.unit==='in'?'lb':'kg';
+  var toIn=function(v,u){u=u||dimDef;return u==='mm'?v/MM:u==='cm'?v*10/MM:v};
+  var toKg=function(v,u){u=u||wtDef;return u==='lb'?v/LB:u==='g'?v/1000:u==='oz'?v/35.274:v};
+  var found=[],skipped=[];
+  rows.slice(1).forEach(function(r,ri){
+    var o={},has={};cols.forEach(function(c,ci){if(!c.k)return;var raw=r[ci]==null?'':String(r[ci]).trim();has[c.k]=true;
+      if(c.k==='name'||c.k==='cat'||c.k==='notes')o[c.k]=raw.replace(/^'(?=[=+\-@])/,'');
+      else if(c.k==='stack')o.stack=/^(y|yes|true|1|x|stack(able)?)$/i.test(raw);
+      else if(c.k==='wt'){var w=num(raw);o.wt=w>=0?toKg(w,c.unit):0}
+      else{var d=num(raw);o[c.k]=d>0?toIn(d,c.unit):NaN}});
+    var line=ri+2;
+    if(!o.name){skipped.push('row '+line+': no name');return}
+    var bad=['l','w','h'].filter(function(k){return !(o[k]>0)});
+    if(bad.length){skipped.push('row '+line+': '+bad.map(function(k){return {l:'length',w:'width',h:'height'}[k]}).join(', ')+' missing or not a number');return}
+    found.push({o:o,has:has})});
+  if(!found.length)return {err:'No usable rows. '+skipped.slice(0,3).join('; ')+'.'};
+  if(mode==='replace')LIB=[];
+  var added=0,updated=0;
+  found.forEach(function(x){
+    var o=x.o,ex=LIB.filter(function(i){return (i.name||'').toLowerCase()===o.name.toLowerCase()})[0];
+    if(ex){updated++;ex.l=o.l;ex.w=o.w;ex.h=o.h;if(x.has.cat&&o.cat)ex.cat=o.cat;if(x.has.wt)ex.wt=o.wt;if(x.has.stack)ex.stack=o.stack;if(x.has.notes)ex.notes=o.notes}
+    else{added++;LIB.push({id:uid(),name:o.name,cat:o.cat||'Other',l:o.l,w:o.w,h:o.h,wt:o.wt||0,stack:!!o.stack,notes:o.notes||''})}});
+  saveLib();
+  return {added:added,updated:updated,skipped:skipped}}
+function flash(id,msg){var el=$(id);el.textContent=msg}
+function copyText(txt,ok,fail){
+  var fb=function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();var good=false;try{good=document.execCommand('copy')}catch(x){}ta.remove();good?ok():fail()};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb()}
+$('#libExp').addEventListener('click',function(){
+  if(!LIB.length){flash('#libMsg','The library is empty, so there is nothing to export.');return}
+  try{var blob=new Blob(['﻿'+libTable(',')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='peli-gear-library.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1500);
+    flash('#libMsg','Exported '+LIB.length+' items to peli-gear-library.csv. If your browser blocked the download, use Copy for Excel and paste into a sheet.')}
+  catch(x){flash('#libMsg','The download did not start. Use Copy for Excel and paste into a sheet.')}});
 $('#libCopy').addEventListener('click',function(){
-  var btn=$('#libCopy'),txt=JSON.stringify(LIB.map(function(i){return {name:i.name,cat:i.cat,l:i.l,w:i.w,h:i.h,wt:i.wt,stack:!!i.stack,notes:i.notes||''}}),null,1);
-  var done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy library'},1400)};
-  var fb=function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(x){btn.textContent='Copy failed'}ta.remove()};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fb);else fb()});
-$('#libImp').addEventListener('click',function(){var b=$('#libImpBox');b.hidden=!b.hidden;if(!b.hidden)$('#libImpTxt').focus()});
+  if(!LIB.length){flash('#libMsg','The library is empty, so there is nothing to copy.');return}
+  copyText(libTable('\t'),function(){flash('#libMsg','Copied '+LIB.length+' items. Paste into Excel or Google Sheets with Ctrl+V or Cmd+V.')},function(){flash('#libMsg','Copy was blocked by this browser. Use Export CSV instead.')})});
+$('#libImp').addEventListener('click',function(){var b=$('#libImpBox');b.hidden=!b.hidden;if(!b.hidden)$('#libFile').focus()});
+$('#libFile').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){$('#libImpTxt').value=String(rd.result||'');$('#libImpMsg').textContent='Loaded '+f.name+'. Choose Import items to add it.'};
+  rd.onerror=function(){$('#libImpMsg').textContent='That file could not be read.'};rd.readAsText(f)});
 $('#libImpGo').addEventListener('click',function(){
-  var msg=$('#libImpMsg');
-  try{var j=JSON.parse($('#libImpTxt').value),n=0;if(!Array.isArray(j))throw 0;
-    j.forEach(function(x){if(!x||!x.name||!(x.l>0)||!(x.w>0)||!(x.h>0))return;
-      LIB.push({id:uid(),name:String(x.name),cat:String(x.cat||'Other'),l:+x.l,w:+x.w,h:+x.h,wt:+x.wt>0?+x.wt:0,stack:!!x.stack,notes:String(x.notes||'')});n++});
-    if(!n){msg.textContent='No valid items found. Each needs a name and L, W and H sizes.';return}
-    saveLib();renderLibrary();msg.textContent='Imported '+n+' item'+(n>1?'s':'')+'.';$('#libImpTxt').value=''}
-  catch(x){msg.textContent='That is not valid library JSON. Paste what Copy library produced.'}});
+  var msg=$('#libImpMsg'),txt=$('#libImpTxt').value;
+  if(!txt.trim()){msg.textContent='Choose a file or paste some rows first.';return}
+  var mode=document.querySelector('input[name=impMode]:checked').value;
+  if(mode==='replace'&&LIB.length&&!$('#libImpGo').dataset.arm){$('#libImpGo').dataset.arm='1';$('#libImpGo').textContent='Confirm replace';msg.textContent='This deletes your '+LIB.length+' current items first.';
+    setTimeout(function(){delete $('#libImpGo').dataset.arm;$('#libImpGo').textContent='Import items'},4000);return}
+  delete $('#libImpGo').dataset.arm;$('#libImpGo').textContent='Import items';
+  var r=importCSV(txt,mode);
+  if(r.err){msg.textContent=r.err;return}
+  libQ='';libCat='';$('#libQ').value='';renderLibrary();drawLibSelect();
+  msg.textContent='Added '+r.added+', updated '+r.updated+(r.skipped.length?', skipped '+r.skipped.length+' ('+r.skipped.slice(0,3).join('; ')+(r.skipped.length>3?'…':'')+')':'')+'.';
+  $('#libImpTxt').value=''});
 /* tabs */
 function route(){
   tab=location.hash==='#library'?'library':'planner';
@@ -894,7 +1007,7 @@ function planText(){
   var G=grid(),C=comps(G),A=analyse(G,C),c=G.c,t=[];
   t.push('TrekPak plan: Pelican '+c.id+' ('+fSize(c.L,c.W)+', '+fLen(c.D)+' deep)');
   var gw=A.rows.reduce(function(a,o){return a+(o.inst.item.wt||0)},0);
-  t.push('Grid '+fLen(G.p)+', clearance '+fLen(S.clear));
+  t.push('Grid '+fPitch(G.p)+', clearance '+(S.clear?fPitch(S.clear):'none'));
   t.push('Weight: gear '+fW(gw)+(S.caseWt?', case '+fW(S.caseWt)+', total '+fW(gw+S.caseWt):'')+(S.limit?', limit '+fW(S.limit):''));t.push('');t.push('Compartments');
   C.list.forEach(function(cp){var oc=A.occ[cp.id]||[];
     t.push(cp.letter+' '+(cp.rect?fSize(cp.bw*G.p,cp.bh*G.p):'irregular')+': '+(oc.length?oc.map(function(o){return o.inst.name}).join(', '):'spare'))});
@@ -906,17 +1019,18 @@ function planText(){
 }
 
 /* ---------- events ---------- */
-function setCase(id){S.caseId=id;autoLayout();fullRender()}
+function setCase(id){S.caseId=id;if(!S.caseWtCustom)S.caseWt=caseById(id).wt;autoLayout();fullRender()}
 $('#caseSel').addEventListener('change',function(e){setCase(e.target.value)});
-$('#pitchSel').addEventListener('change',function(e){S.pitch=+e.target.value;autoLayout();fullRender()});
-$('#clearSel').addEventListener('change',function(e){S.clear=+e.target.value;autoLayout();fullRender()});
+$('#pitchSel').addEventListener('change',function(e){if(e.target.value==='cur')return;S.pitch=PITCHES[S.unit][+e.target.value][0];autoLayout();fullRender()});
+$('#clearSel').addEventListener('change',function(e){if(e.target.value==='cur')return;S.clear=CLEARS[S.unit][+e.target.value][0];autoLayout();fullRender()});
 function setUnit(u){S.unit=u;fullRender();if(tab==='library')renderLibrary()}
 ['#uIn','#uIn2'].forEach(function(q){$(q).addEventListener('click',function(){setUnit('in')})});
 ['#uMm','#uMm2'].forEach(function(q){$(q).addEventListener('click',function(){setUnit('mm')})});
 document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){S.mode=b.dataset.mode;drawControls();refresh()})});
 $('#auto').addEventListener('click',function(){autoLayout();refresh()});
 $('#clear').addEventListener('click',function(){S.h=new Set();S.v=new Set();S.anchor={};S.sel=null;refresh()});
-$('#caseWt').addEventListener('input',function(e){var x=parseFloat(e.target.value);S.caseWt=x>=0?wundisp(x):0;refresh()});
+$('#caseWt').addEventListener('input',function(e){var x=parseFloat(e.target.value);if(x>=0){S.caseWt=wundisp(x);S.caseWtCustom=true}else{S.caseWtCustom=false;S.caseWt=caseById(S.caseId).wt}refresh()});
+$('#cwNote').addEventListener('click',function(e){if(e.target.dataset.reset){S.caseWtCustom=false;S.caseWt=caseById(S.caseId).wt;fullRender()}});
 $('#limSel').addEventListener('change',function(e){var v=e.target.value;if(v==='custom'){$('#limIn').focus();return}S.limit=+v;$('#limIn').value=S.limit?wdisp(S.limit):'';refresh()});
 $('#limIn').addEventListener('input',function(e){var x=parseFloat(e.target.value);S.limit=x>0?wundisp(x):0;
   var m=[0,7,10,23,32].filter(function(q){return Math.abs(q-S.limit)<.01})[0];$('#limSel').value=m===undefined?'custom':String(m);refresh()});
