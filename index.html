@@ -66,12 +66,57 @@ select,input[type=number],input[type=text]{background:var(--bg);border:1px solid
 .info b{color:var(--ink);font-weight:600}
 /* gear list */
 .items{display:flex;flex-direction:column;gap:8px}
-.item{display:grid;grid-template-columns:14px minmax(0,1fr) 28px;gap:6px 8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.item{border:1px solid var(--line);border-radius:6px;background:var(--bg);overflow:hidden}
 .item .sw{width:14px;height:14px;border-radius:3px}
 .item .dims{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
 .item .dims label{display:flex;flex-direction:column;gap:2px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
 .item .dims input{padding:5px 6px;font-family:var(--font-mono);font-size:13px}
-.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.sync{border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.sync summary{cursor:pointer;padding:9px 12px;font-weight:600;display:flex;gap:8px;align-items:center}
+.sync .syncbody{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px}
+.steps{margin:0;padding-left:20px;color:var(--muted);display:flex;flex-direction:column;gap:4px;max-width:90ch}
+.planner{display:flex;flex-direction:column;gap:14px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 28px;border-bottom:1px solid var(--line);padding-bottom:0}
+header.top h1{padding-bottom:8px}
+header.top .seg{margin-bottom:8px;margin-left:auto}
+.tabs{display:flex;gap:4px;border-bottom:0}
+.strip{flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:12px 14px;padding:12px 14px}
+.strip .field{flex:0 1 160px}
+.strip .field.grow{flex:1 1 240px}
+.stripinfo{flex:1 1 240px;align-self:center}
+.gh{display:flex;justify-content:space-between;align-items:baseline}
+.gh a{color:var(--accent);font-size:13px}
+.ihead{display:grid;grid-template-columns:12px minmax(0,1fr) auto 10px;gap:2px 8px;align-items:center;width:100%;padding:9px 10px;background:none;border:0;cursor:pointer;text-align:left;color:inherit}
+.ihead:hover{background:var(--accent-soft)}
+.ihead .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ihead .qty{font-size:12px;color:var(--muted)}
+.ihead .sum{grid-column:2/-1;font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item.open .ihead{background:var(--accent-soft)}
+.ibody{display:flex;flex-direction:column;gap:10px;padding:10px;border-top:1px solid var(--line)}
+.ibody .libr{display:flex;gap:6px;justify-content:space-between;flex-wrap:wrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line);border:1px solid var(--muted)}
+.dot.ok{background:var(--ok);border-color:var(--ok)}
+.dot.warn{background:var(--warn);border-color:var(--warn)}
+.dot.bad{background:var(--bad);border-color:var(--bad)}
+.warnhint{color:var(--warn);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px 8px}
+.chip{padding:4px 11px;border:1px solid var(--line);border-radius:99px;background:var(--panel);font-size:12px;color:var(--muted)}
+.chip b{color:var(--ink);font-family:var(--font-mono);font-weight:500}
+.chip.bad{border-color:var(--bad)}
+.chip.bad b{color:var(--bad)}
+.panel{gap:14px}
+.ptabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 0;padding:0 8px;overflow-x:auto}
+.ptabs button{border:0;background:transparent;padding:11px 12px;cursor:pointer;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.ptabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.bdg{font-family:var(--font-mono);font-size:11px;font-weight:500;color:var(--muted);margin-left:4px}
+.bdg.bad{color:var(--bad)}
+.bdg.warn{color:var(--warn)}
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer}
+.menu summary::-webkit-details-marker{display:none}
+.menuitems{position:absolute;right:0;top:calc(100% + 4px);z-index:5;display:flex;flex-direction:column;gap:4px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:170px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.menuitems .btn{text-align:left}
+@media(max-width:920px){.rail{order:2}header.top .seg{margin-left:0}}
 .tabs button{border:0;background:transparent;padding:9px 16px;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
 .tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
 #libTable td{padding:5px 6px;vertical-align:middle}
@@ -164,102 +209,84 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
 <div class="wrap">
   <header class="top">
     <h1><svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect x="14" y="2.5" width="12" height="5" rx="2" fill="none" stroke="var(--accent)" stroke-width="2"/><rect x="2.5" y="6.5" width="35" height="29" rx="5" fill="var(--foam)" stroke="var(--accent)" stroke-width="2.5"/><rect x="8" y="12" width="9" height="18" rx="1.5" fill="var(--accent)"/><rect x="20" y="12" width="12" height="8" rx="1.5" fill="var(--accent)"/><rect x="20" y="23" width="12" height="7" rx="1.5" fill="var(--accent)" opacity=".5"/></svg>Peli Planner</h1>
-    <p>Pick a Pelican case, list your gear, and draw divider runs on a top-down view to see what fits and which case you need.</p>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tabPlanner" aria-selected="true" data-tab="planner">Case planner</button>
+      <button role="tab" id="tabLibrary" aria-selected="false" data-tab="library">Gear library <span class="mono" id="libCount"></span></button>
+    </nav>
+    <div class="seg" role="group" aria-label="Units (imperial: in, lb. metric: mm, kg)"><button id="uIn" aria-pressed="true">Imperial</button><button id="uMm" aria-pressed="false">Metric</button></div>
   </header>
 
-  <nav class="tabs" role="tablist" aria-label="Sections">
-    <button role="tab" id="tabPlanner" aria-selected="true" data-tab="planner">Case planner</button>
-    <button role="tab" id="tabLibrary" aria-selected="false" data-tab="library">Gear library <span class="mono" id="libCount"></span></button>
-  </nav>
+  <div class="planner" id="viewPlanner">
+    <section class="card strip">
+      <label class="field grow"><span>Pelican case</span><select id="caseSel"></select></label>
+      <label class="field"><span>Grid</span><select id="pitchSel"></select></label>
+      <label class="field"><span>Clearance</span><select id="clearSel"></select></label>
+      <p class="info stripinfo" id="caseInfo"></p>
+    </section>
 
-  <div class="app" id="viewPlanner">
-    <aside class="rail">
-      <section class="card">
-        <h2>Case</h2>
-        <label class="field"><span>Pelican case with TrekPak</span><select id="caseSel"></select></label>
-        <p class="info" id="caseInfo"></p>
-        <div class="row">
-          <label class="field"><span>Grid</span>
-            <select id="pitchSel"></select></label>
-          <label class="field"><span>Clearance</span>
-            <select id="clearSel"></select></label>
-        </div>
-        <div class="row" style="justify-content:space-between">
-          <span class="info">Units</span>
-          <div class="seg" role="group" aria-label="Units (imperial: in, lb. metric: mm, kg)"><button id="uIn" aria-pressed="true">Imperial</button><button id="uMm" aria-pressed="false">Metric</button></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Gear <span class="mono" id="gearCount" style="text-transform:none;letter-spacing:0"></span></h2>
-        <p class="hint"><a href="#library" style="color:var(--accent)">Manage your gear library</a>. Enter true sizes L × W × H. Spin, Roll and Tip turn the item to find the best fit; Auto picks the smallest footprint. Example gear is loaded, replace it with yours.</p>
-        <div class="items" id="items"></div>
-        <div class="row">
-          <select id="presetSel" aria-label="Add a common item" style="flex:1 1 150px"></select>
-          <button class="btn" id="addPreset">Add</button>
-          <button class="btn" id="addBlank">Blank item</button>
-        </div>
-      </section>
-    </aside>
-
-    <main class="main">
-      <section class="card canvas-card">
-        <div class="toolbar">
-          <div class="seg" role="group" aria-label="Tool">
-            <button data-mode="draw" aria-pressed="true">Draw dividers</button>
-            <button data-mode="erase" aria-pressed="false">Erase</button>
-            <button data-mode="move" aria-pressed="false">Move gear</button>
-            <button data-mode="assign" aria-pressed="false">Assign gear</button>
-          </div>
-          <div class="grp">
-            <button class="btn primary" id="auto">Auto-arrange gear</button>
-            <button class="btn" id="clear">Clear dividers</button>
-            <button class="btn" id="copy">Copy plan</button>
-          </div>
-        </div>
-        <svg id="cv" role="img" tabindex="0" aria-label="Top-down view of the case interior with divider runs"></svg>
-        <div class="movebar" id="moveBar" hidden></div>
-        <p class="hint" id="modeHint"></p>
-      </section>
-
-      <div class="stats" id="stats"></div>
-
-      <section class="card" id="wtCard">
-        <h2>Weight</h2>
-        <div class="row">
-          <label class="field"><span id="cwLbl">Empty case</span><input type="number" id="caseWt" min="0" step="any" placeholder="Pelican weight"></label>
-          <label class="field"><span>Weight limit</span><select id="limSel"></select></label>
-          <label class="field"><span id="limLbl">Custom limit</span><input type="number" id="limIn" min="0" step="any" placeholder="none"></label>
-        </div>
-        <p class="hint" id="cwNote" style="margin:0"></p>
-        <div id="wtOut"></div>
-      </section>
-
-      <div class="two">
+    <div class="app">
+      <aside class="rail">
         <section class="card">
-          <h2>Gear check</h2>
-          <ul class="list" id="check"></ul>
+          <div class="gh"><h2>Gear <span class="mono" id="gearCount" style="text-transform:none;letter-spacing:0"></span></h2><a href="#library">Gear library</a></div>
+          <div class="items" id="items"></div>
+          <div class="row">
+            <select id="presetSel" aria-label="Add an item from your library" style="flex:1 1 150px"></select>
+            <button class="btn" id="addPreset">Add</button>
+            <button class="btn" id="addBlank">Blank</button>
+          </div>
         </section>
-        <section class="card" id="selCard">
-          <h2>Compartment</h2>
-          <div id="selBody"></div>
+      </aside>
+
+      <main class="main">
+        <section class="card canvas-card">
+          <div class="toolbar">
+            <div class="seg" role="group" aria-label="Tool">
+              <button data-mode="draw" aria-pressed="true">Draw dividers</button>
+              <button data-mode="erase" aria-pressed="false">Erase</button>
+              <button data-mode="move" aria-pressed="false">Move gear</button>
+            </div>
+            <div class="grp">
+              <button class="btn primary" id="auto">Auto-arrange gear</button>
+              <button class="btn" id="clear">Clear dividers</button>
+              <button class="btn" id="copy">Copy plan</button>
+            </div>
+          </div>
+          <svg id="cv" role="img" tabindex="0" aria-label="Top-down view of the case interior with divider runs"></svg>
+          <div class="movebar" id="moveBar" hidden></div>
+          <p class="hint warnhint" id="notice" role="status" hidden></p>
+          <p class="hint" id="modeHint"></p>
         </section>
-      </div>
 
-      <section class="card">
-        <h2>Divider cut list</h2>
-        <div id="cuts"></div>
-      </section>
+        <div class="chips" id="stats"></div>
 
-      <section class="card">
-        <div class="row" style="justify-content:space-between">
-          <h2>Which case do I need?</h2>
-          <label class="check"><input type="checkbox" id="onlyFit" checked> Hide cases that don't fit</label>
-        </div>
-        <p class="hint">Every TrekPak case is test-packed with your current gear list, grid and clearance. Pick a row to switch to that case.</p>
-        <div class="tablewrap"><table id="finder"></table></div>
-      </section>
-    </main>
+        <section class="card panel">
+          <div class="ptabs" role="tablist" aria-label="Plan details">
+            <button role="tab" data-panel="check" aria-selected="true">Gear check <span class="bdg" id="bdgCheck"></span></button>
+            <button role="tab" data-panel="weight" aria-selected="false">Weight <span class="bdg" id="bdgWeight"></span></button>
+            <button role="tab" data-panel="cuts" aria-selected="false">Cut list <span class="bdg" id="bdgCuts"></span></button>
+            <button role="tab" data-panel="find" aria-selected="false">Find a case <span class="bdg" id="bdgFind"></span></button>
+          </div>
+          <div id="pCheck"><ul class="list" id="check"></ul></div>
+          <div id="pWeight" hidden>
+            <div class="row">
+              <label class="field"><span id="cwLbl">Empty case</span><input type="number" id="caseWt" min="0" step="any" placeholder="Pelican weight"></label>
+              <label class="field"><span>Weight limit</span><select id="limSel"></select></label>
+              <label class="field"><span id="limLbl">Custom limit</span><input type="number" id="limIn" min="0" step="any" placeholder="none"></label>
+            </div>
+            <p class="hint" id="cwNote" style="margin:10px 0 0"></p>
+            <div id="wtOut"></div>
+          </div>
+          <div id="pCuts" hidden><div id="cuts"></div></div>
+          <div id="pFind" hidden>
+            <div class="row" style="justify-content:space-between;margin-bottom:8px">
+              <p class="hint" style="margin:0">Every TrekPak case is test-packed with your gear, grid and clearance. Pick a row to switch to that case.</p>
+              <label class="check"><input type="checkbox" id="onlyFit" checked> Hide cases that don't fit</label>
+            </div>
+            <div class="tablewrap"><table id="finder"></table></div>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
   <section id="viewLibrary" hidden>
@@ -270,13 +297,30 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
           <select id="libCat" aria-label="Filter by category" style="flex:1 1 140px"></select>
         </div>
         <div class="grp">
-          <div class="seg" role="group" aria-label="Units"><button id="uIn2" aria-pressed="true">Imperial</button><button id="uMm2" aria-pressed="false">Metric</button></div>
           <button class="btn primary" id="libNew">New item</button>
-          <button class="btn" id="libExp">Export CSV</button>
-          <button class="btn" id="libCopy">Copy for Excel</button>
-          <button class="btn" id="libImp">Import</button>
+          <details class="menu" id="ioMenu"><summary class="btn">Import / export</summary>
+            <div class="menuitems"><button class="btn" id="libImp">Import</button><button class="btn" id="libExp">Export CSV</button></div>
+          </details>
         </div>
       </div>
+      <details id="syncBox" class="sync">
+        <summary>Live sync from a Google Sheet <span class="pill mute" id="syncPill" hidden></span></summary>
+        <div class="syncbody">
+          <ol class="steps">
+            <li>In Google Sheets, make a sheet with the headings Name, Category, Length (mm), Width (mm), Height (mm), Weight (kg), Stackable, Notes. Export CSV from this page imports straight into a new sheet with File &gt; Import.</li>
+            <li>Choose File &gt; Share &gt; Publish to web. Pick the sheet tab, choose Comma-separated values (.csv), then Publish, and copy the link.</li>
+            <li>Paste the link below and choose Sync now.</li>
+          </ol>
+          <label class="field"><span>Published CSV link</span><input type="url" id="syncUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" autocomplete="off"></label>
+          <div class="row">
+            <label class="check"><input type="checkbox" id="syncAuto"> Check for changes automatically</label>
+            <label class="check"><input type="checkbox" id="syncMirror"> Remove items that are not in the sheet</label>
+          </div>
+          <div class="row"><button class="btn primary" id="syncGo">Sync now</button><button class="btn" id="syncStop">Stop syncing</button></div>
+          <p class="hint" style="margin:0">Publishing lets anyone with the link read the whole sheet, so keep anything private out of it. Google can take a few minutes to show an edit. Items are matched by name, and the sheet overwrites that item's size, weight and notes here.</p>
+        </div>
+      </details>
+      <p class="hint" id="syncStatus" role="status" style="margin:0" hidden></p>
       <div id="libImpBox" hidden style="display:flex;flex-direction:column;gap:10px">
         <p class="hint" style="margin:0">Import a CSV exported from this page or built in Excel or Sheets. The first row must be headings: Name, Category, Length, Width, Height, Weight, Stackable, Notes. Put units in the headings, like Length (mm) or Weight (kg), otherwise your current units are assumed. You can also paste rows copied from a spreadsheet.</p>
         <div class="row"><input type="file" id="libFile" accept=".csv,.tsv,.txt,text/csv,text/plain" aria-label="Choose a CSV file"></div>
@@ -290,7 +334,7 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
       <p class="hint" id="libMsg" role="status" style="margin:0"></p>
       <p class="info" id="libSum"></p>
       <div class="tablewrap" style="max-height:none"><table id="libTable" style="min-width:1040px"></table></div>
-      <p class="hint">The library is saved in this browser only. Export CSV to back it up or move it to another device, and open it in Excel or Google Sheets to edit in bulk. Sizes are the real L × W × H of each item. Add to case puts a copy in the planner.</p>
+      <p class="hint">The library is saved in this browser only. Export CSV to back it up or move it to another device, or open it in Excel or Google Sheets to edit in bulk. Live sync above can keep it up to date from a published Google Sheet. Sizes are the real L × W × H of each item. Add to case puts a copy in the planner.</p>
       <datalist id="catList"></datalist>
     </div>
   </section>
@@ -316,6 +360,8 @@ var PRESETS=[
  ['On-camera monitor',7.5,4.8,1.5,0.5],['V-mount battery',5.5,3.5,2.8,0.7],['Wireless mic kit',6.0,4.5,2.0,0.4],['Shotgun mic and blimp',12.0,3.5,3.5,0.8],
  ['LED light panel',9.0,6.0,1.5,1.0],['Cable pouch',8.0,6.0,3.0,0.8],['Gimbal',14.0,6.5,4.5,1.9],['Laptop 14 in',14.0,9.5,0.8,1.6],['Card wallet',5.0,3.5,1.0,0.1]
 ];
+/* Optional: paste your published Google Sheet CSV link here to give every visitor live sync by default */
+var DEFAULT_SYNC_URL='';
 var KEY='trekpak-planner-v1', MM=25.4, LB=2.20462;
 var $=function(s){return document.querySelector(s)};
 var svg=$('#cv');
@@ -328,6 +374,7 @@ function defaults(){
     h:new Set(),v:new Set(),anchor:{},sel:null,onlyFit:true};
 }
 var S=load()||defaults();
+if(S.mode==='assign')S.mode='draw';
 if(S.caseWtCustom===undefined)S.caseWtCustom=!!S.caseWt;
 if(!S.caseWtCustom)S.caseWt=caseById(S.caseId).wt;
 if(!S.autoDone){S.autoDone=true;autoLayout()}
@@ -620,7 +667,7 @@ svg.addEventListener('pointerdown',function(e){
     moveMsg='';if(!mo){S.sel={r:mr,c:mc};S.selKey=null;refresh();return}
     if(e.shiftKey&&occL.length>1){mo=occL[occL.length-1];grp=[mo]}
     else if(mo.inst.item.stack){grp=occL.filter(function(o){return o.inst.item.stack});mo=grp.slice().sort(function(x,y){return y.cells[0]*y.cells[1]-x.cells[0]*x.cells[1]})[0]}
-    S.selKey=mo.inst.key;
+    S.selKey=mo.inst.key;S.openItem=mo.inst.item.id;drawItems();
     var cp=lastC.list[mci],a=mo.cells[0],b=mo.cells[1],w=a,h=b;
     if(cp.rect){if(cp.bw===a&&cp.bh===b){w=a;h=b}else if(cp.bw===b&&cp.bh===a){w=b;h=a}else if(!(a<=cp.bw&&b<=cp.bh)&&b<=cp.bw&&a<=cp.bh){w=b;h=a}}
     var off=cp.rect?{r:mr-cp.minr,c:mc-cp.minc}:{r:Math.floor(h/2),c:Math.floor(w/2)};
@@ -630,8 +677,6 @@ svg.addEventListener('pointerdown',function(e){
     svg.classList.add('moving');drawPreview();
     try{svg.setPointerCapture(e.pointerId)}catch(x){}
     return}
-  if(S.mode==='assign'){var r=Math.floor(s.fy),c=Math.floor(s.fx);
-    if(r>=0&&c>=0&&r<lastG.rows&&c<lastG.cols){S.sel={r:r,c:c};refresh()}return}
   drag={a:{x:s.x,y:s.y},cur:{x:s.x,y:s.y},start:s,moved:false};
   try{svg.setPointerCapture(e.pointerId)}catch(x){}
 });
@@ -653,28 +698,27 @@ document.addEventListener('keydown',function(e){
     drag.off.r=Math.min(drag.off.r,drag.h-1);drag.off.c=Math.min(drag.off.c,drag.w-1);dragPos(drag);drawPreview()}});
 
 /* ---------- panels ---------- */
+function drawNotice(A){
+  var n=A.rows.filter(function(o){return o.ci<0}).length,el=$('#notice');
+  el.hidden=!n;el.textContent=n?n+' item'+(n>1?'s are':' is')+' not placed because there is no free space big enough. Auto-arrange gear repacks everything.':''}
 function drawStats(G,C,A){
   var rs=runs(G),len=rs.reduce(function(t,w){return t+w.len},0);
   var placed=A.rows.filter(function(o){return o.ci>=0}).length,bad=A.rows.filter(function(o){return o.status==='bad'||o.status==='none'}).length;
   var pct=Math.round(A.usedCells/A.total*100);
-  var st=[[C.list.length,'Compartments'],[rs.length,'Divider runs'],[fLen(len),'Divider length'],[placed+' / '+A.rows.length,'Gear placed'],[pct+'%','Floor used'],[bad,'Need attention']];
-  $('#stats').innerHTML=st.map(function(x){return '<div class="stat"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join('');
+  $('#stats').innerHTML=[
+    '<span class="chip"><b>'+C.list.length+'</b> compartments</span>',
+    '<span class="chip"><b>'+rs.length+'</b> divider runs ('+fLen(len)+')</span>',
+    '<span class="chip"><b>'+placed+' / '+A.rows.length+'</b> gear placed</span>',
+    '<span class="chip"><b>'+pct+'%</b> floor used</span>',
+    '<span class="chip'+(bad?' bad':'')+'"><b>'+bad+'</b> need attention</span>'].join('');
+  var bc=$('#bdgCheck');bc.textContent=bad?String(bad):'';bc.className='bdg'+(bad?' bad':'');
+  $('#bdgCuts').textContent=rs.length?String(rs.length):'';
 }
 function drawCheck(G,C,A){
   $('#check').innerHTML=A.rows.map(function(o){
     var cls=o.status==='ok'?'ok':o.status==='warn'?'warn':o.status==='bad'?'bad':'mute';
     var sub=o.tall?'':'';
     return '<li><span class="n"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;background:'+hsl(o.inst.item.hue)+'"></span>'+esc(o.inst.name)+'</span><span class="pill '+cls+'">'+o.why+'</span></li>'}).join('')||'<li>No gear yet.</li>';
-}
-function drawSel(G,C,A){
-  var el=$('#selBody');
-  if(!S.sel||S.sel.r>=G.rows||S.sel.c>=G.cols){el.innerHTML='<p class="info">Choose <b>Assign gear</b> and click a compartment to put gear in it. A compartment is any area enclosed by dividers.</p>';return}
-  var ci=C.label[S.sel.r*G.cols+S.sel.c],cp=C.list[ci],oc=A.occ[ci]||[];
-  var opts=A.rows.filter(function(o){return o.ci!==ci}).map(function(o){
-    return '<option value="'+o.inst.key+'">'+esc(o.inst.name)+(o.ci>=0?' (move from '+C.list[o.ci].letter+')':'')+'</option>'}).join('');
-  el.innerHTML='<p class="info"><b>Compartment '+cp.letter+'</b> · '+(cp.rect?fSize(cp.bw*G.p,cp.bh*G.p):'irregular, '+fSq(cp.cells*G.p*G.p))+'</p>'
-    +(oc.length?'<p class="info">Load '+fW(oc.reduce(function(t,o){return t+(o.inst.item.wt||0)},0))+'</p>':'')+'<div class="occ" style="margin:8px 0">'+(oc.map(function(o){return '<span class="pill mute" style="display:inline-flex;gap:6px;align-items:center">'+esc(o.inst.name)+' <button data-un="'+o.inst.key+'" style="border:0;background:none;cursor:pointer;color:inherit" aria-label="Remove '+esc(o.inst.name)+'">×</button></span>'}).join('')||'<span class="info">Empty</span>')+'</div>'
-    +(opts?'<div class="row"><select id="assignSel" aria-label="Gear to put here" style="flex:1 1 160px">'+opts+'</select><button class="btn primary" id="assignBtn">Put here</button></div>':'<p class="info">All gear is already in this compartment.</p>');
 }
 function drawCuts(G){
   var rs=runs(G),el=$('#cuts');
@@ -709,6 +753,7 @@ function drawFinder(){
   var h='<thead><tr><th>Case</th><th>Interior L × W × D</th><th>Empty weight</th><th>Result</th><th>Floor used</th><th>Packed weight</th><th>Note</th></tr></thead><tbody>';
   var gearW=instances().reduce(function(t,x){return t+(x.item.wt||0)},0),lim=S.limit||0;
   var okRows=rows.filter(function(o){return o.st!=='no'}),light=okRows.length?okRows.slice().sort(function(a,b){return a.c.wt-b.c.wt})[0]:null;
+  $('#bdgFind').textContent=okRows.length+' fit';
   rows.forEach(function(o){
     var pill=o.st==='fit'?'<span class="pill ok">Fits</span>':o.st==='tight'?'<span class="pill warn">Tight fit</span>':'<span class="pill bad">No</span>';
     if(o.best)pill+=' <span class="pill mute">Smallest</span>';
@@ -755,20 +800,33 @@ function drawMoveBar(G,C,A){
     +'<button class="btn'+(it.auto?' on':'')+'" data-turn="auto" title="Smallest footprint that fits the case depth">Auto</button></div>'
     +'<button class="btn'+(it.stack?' on':'')+'" data-turn="stack" aria-pressed="'+!!it.stack+'" title="Let this item stack with other stackable gear">Stackable</button>';
 }
+function fDims3(it){return S.unit==='mm'?Math.round(it.l*MM)+'×'+Math.round(it.w*MM)+'×'+Math.round(it.h*MM)+' mm':r1(it.l)+'×'+r1(it.w)+'×'+r1(it.h)+' in'}
+function itemSum(it){return fDims3(it)+(it.wt?' · '+fW(it.wt):'')}
+var DOTTXT={ok:'Fits',warn:'Crowded',bad:'Needs attention',none:'Not placed'};
+function itemDotFrom(A,it){
+  if(!A)return 'none';var rank={ok:0,none:1,warn:2,bad:3},w='ok',has=false;
+  A.rows.forEach(function(o){if(o.inst.item!==it)return;has=true;if(rank[o.status]>rank[w])w=o.status});
+  return has?w:'none'}
+function updateItemDots(A){
+  S.items.forEach(function(it){var el=document.querySelector('[data-dot="'+it.id+'"]');if(!el)return;var c=itemDotFrom(A,it);el.className='dot '+c;el.title=DOTTXT[c]})}
+function updateItemHead(it){
+  var n=document.querySelector('[data-nm="'+it.id+'"]'),q=document.querySelector('[data-qty="'+it.id+'"]'),m=document.querySelector('[data-sum="'+it.id+'"]');
+  if(n)n.textContent=it.name||'Untitled';if(q)q.textContent=it.qty>1?'×'+it.qty:'';if(m)m.textContent=itemSum(it)}
 function drawItems(){
   var D=caseById(S.caseId).D;
   $('#items').innerHTML=S.items.map(function(it){
-    var e=orient(it,D);
-    return '<div class="item" data-id="'+it.id+'"><span class="sw" style="background:'+hsl(it.hue)+'"></span>'
-      +'<input type="text" data-f="name" value="'+esc(it.name)+'" aria-label="Item name"><button class="x" data-del="'+it.id+'" aria-label="Remove '+esc(it.name)+'">×</button>'
+    var e=orient(it,D),open=S.openItem===it.id,id=it.id,dot=itemDotFrom(lastA,it);
+    var h='<div class="item'+(open?' open':'')+'" data-id="'+id+'">'
+      +'<button class="ihead" data-toggle="'+id+'" aria-expanded="'+open+'"><span class="sw" style="background:'+hsl(it.hue)+'"></span><span class="nm" data-nm="'+id+'">'+esc(it.name||'Untitled')+'</span><span class="qty mono" data-qty="'+id+'">'+(it.qty>1?'×'+it.qty:'')+'</span><span class="dot '+dot+'" data-dot="'+id+'" title="'+DOTTXT[dot]+'"></span><span class="sum mono" data-sum="'+id+'">'+itemSum(it)+'</span></button>';
+    if(open)h+='<div class="ibody">'
+      +'<input type="text" data-f="name" value="'+esc(it.name)+'" aria-label="Item name">'
       +'<div class="dims"><label>L<input type="number" min="0" step="any" data-f="l" value="'+disp(it.l)+'"></label><label>W<input type="number" min="0" step="any" data-f="w" value="'+disp(it.w)+'"></label>'
       +'<label>H<input type="number" min="0" step="any" data-f="h" value="'+disp(it.h)+'"></label><label>Qty<input type="number" min="1" step="1" data-f="qty" value="'+it.qty+'"></label><label>'+(S.unit==='in'?'Lb':'Kg')+'<input type="number" min="0" step="any" data-f="wt" value="'+(it.wt?wdisp(it.wt):'')+'" placeholder="0"></label></div>'
-      +'<div class="orient"><div class="obtns"><button class="btn sm" data-act="spin" data-id="'+it.id+'" title="Spin 90° on the vertical axis (swap length and width)">Spin</button>'
-      +'<button class="btn sm" data-act="roll" data-id="'+it.id+'" title="Roll onto its side along its length (swap width and height)">Roll</button>'
-      +'<button class="btn sm" data-act="pitch" data-id="'+it.id+'" title="Tip end over end (swap length and height)">Tip</button>'
-      +'<button class="btn sm'+(it.auto?' on':'')+'" data-act="auto" data-id="'+it.id+'" aria-pressed="'+!!it.auto+'" title="Pick the orientation with the smallest footprint for the case">Auto</button></div>'
-      +'<label class="stk"><input type="checkbox" data-f="stack"'+(it.stack?' checked':'')+'> Stackable</label><span class="ostat mono">'+fSize(e.l,e.w)+' footprint, '+fLen(e.h)+' high'+(e.h>D+1e-6?' !':'')+'</span></div><div class="libr"><button class="btn sm" data-act="savelib" data-id="'+it.id+'" title="Keep this item in your gear library">'+(it.libId&&LIB.some(function(l){return l.id===it.libId})?'Update library':'Save to library')+'</button></div></div>'}).join('')
-    ||'<p class="info">No gear yet. Add an item below.</p>';
+      +'<div class="orient"><label class="stk"><input type="checkbox" data-f="stack"'+(it.stack?' checked':'')+'> Stackable</label></div>'
+      +'<span class="ostat mono">Sits as '+fSize(e.l,e.w)+' footprint, '+fLen(e.h)+' high'+(e.h>D+1e-6?' (too tall)':'')+'</span>'
+      +'<div class="libr"><button class="btn sm" data-act="savelib" data-id="'+id+'" title="Keep this item in your gear library">'+(it.libId&&LIB.some(function(l){return l.id===it.libId})?'Update library':'Save to library')+'</button>'
+      +'<button class="btn sm danger" data-del="'+id+'">Remove from case</button></div></div>';
+    return h+'</div>'}).join('')||'<p class="info">No gear yet. Add an item below.</p>';
   var n=instances().length;$('#gearCount').textContent='· '+n+' piece'+(n===1?'':'s');
 }
 function drawWeight(G,C,A){
@@ -776,6 +834,7 @@ function drawWeight(G,C,A){
   var gear=rows.reduce(function(t,r){return t+r.wt},0),cw=S.caseWt||0,total=gear+cw,lim=S.limit||0;
   var missing=S.items.filter(function(i){return !(i.wt>0)}).length;
   var scale=Math.max(total,lim)||1,state=!lim?'':total>lim+1e-9?'bad':total>lim*.9?'warn':'ok';
+  var bw=$('#bdgWeight');bw.textContent=fW(total);bw.className='bdg'+(state==='bad'?' bad':state==='warn'?' warn':'');
   var left=lim?(total>lim?'Over by '+fW(total-lim):fW(lim-total)+' left'):'No limit set';
   var h='<div class="stats" style="margin-bottom:10px">'
     +'<div class="stat"><b>'+fW(gear)+'</b><span>Gear</span></div>'
@@ -799,7 +858,7 @@ function drawControls(){
   $('#caseSel').innerHTML=Object.keys(fams).map(function(f){return '<optgroup label="'+f+'">'+fams[f].map(function(c){
     return '<option value="'+c.id+'"'+(c.id===S.caseId?' selected':'')+'>'+c.id+' · '+fCase(c).replace(/ × /g,'×')+'</option>'}).join('')+'</optgroup>'}).join('');
   fillPreset($('#pitchSel'),PITCHES[S.unit],S.pitch);fillPreset($('#clearSel'),CLEARS[S.unit],S.clear);
-  ['#uIn','#uIn2'].forEach(function(q){$(q).setAttribute('aria-pressed',S.unit==='in')});['#uMm','#uMm2'].forEach(function(q){$(q).setAttribute('aria-pressed',S.unit==='mm')});
+  $('#uIn').setAttribute('aria-pressed',S.unit==='in');$('#uMm').setAttribute('aria-pressed',S.unit==='mm');
   drawLibSelect();
   $('#onlyFit').checked=S.onlyFit!==false;
   var u=S.unit==='in'?'lb':'kg';$('#cwLbl').textContent='Empty case ('+u+')';$('#limLbl').textContent='Custom limit ('+u+')';
@@ -810,14 +869,13 @@ function drawControls(){
   document.querySelectorAll('[data-mode]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.mode===S.mode)});
 }
 function drawCaseInfo(G){
-  var c=G.c;$('#caseInfo').innerHTML='<b>'+c.id+'</b> ('+c.fam+') interior '+fSize(c.L,c.W)+', '+fLen(c.D)+' deep. Grid is '+G.cols+' × '+G.rows+' cells of '+fPitch(G.p)+'.';
-  var hints={draw:'Drag along a grid line to add a divider run. Click a single grid edge to toggle it.',erase:'Drag along a divider to remove it, or click one segment.',move:'Drag a piece of gear to a new spot. Drop stackable gear onto another stackable item to stack it. Hold Shift to pull one item off a stack. Press R while dragging to turn it 90°. Green means it fits, red means it overlaps other gear.',
-    assign:'Click a compartment, then choose which gear goes in it.'};
+  var c=G.c;$('#caseInfo').innerHTML='<b>'+c.id+'</b> '+c.fam+' · '+fSize(c.L,c.W)+' · '+fLen(c.D)+' deep · '+G.cols+' × '+G.rows+' grid cells';
+  var hints={draw:'Drag along a grid line to add a divider run. Click a single grid edge to toggle it.',erase:'Drag along a divider to remove it, or click one segment.',move:'Drag a piece of gear to a new spot. Drop stackable gear onto another stackable item to stack it. Hold Shift to pull one item off a stack. Press R while dragging to turn it 90°. Green means it fits, red means it overlaps other gear.'};
   $('#modeHint').textContent=hints[S.mode];
 }
 function refresh(){
   var G=grid(),C=comps(G),A=analyse(G,C);lastG=G;lastC=C;lastA=A;
-  drawSvg(G,C,A);drawMoveBar(G,C,A);drawWeight(G,C,A);drawStats(G,C,A);drawCheck(G,C,A);drawSel(G,C,A);drawCuts(G);drawFinder();drawCaseInfo(G);save();
+  drawSvg(G,C,A);drawMoveBar(G,C,A);drawWeight(G,C,A);drawStats(G,C,A);drawCheck(G,C,A);drawCuts(G);drawFinder();drawCaseInfo(G);updateItemDots(A);drawNotice(A);save();
 }
 /* ---------- gear library ---------- */
 var LIBKEY='trekpak-library-v1',tab='planner',libQ='',libCat='',delArm=null,delTimer=null;
@@ -836,11 +894,44 @@ function drawLibSelect(){
   el.innerHTML=Object.keys(by).map(function(c){return '<optgroup label="'+esc(c)+'">'+by[c].map(function(i){return '<option value="'+i.id+'">'+esc(i.name||'Untitled')+'</option>'}).join('')+'</optgroup>'}).join('');
   $('#libCount').textContent=LIB.length?'· '+LIB.length:'';
 }
+function findFree(occ,cols,rows,w,h){
+  for(var r=0;r<=rows-h;r++)for(var c=0;c<=cols-w;c++){var ok=true;
+    for(var i=r;i<r+h&&ok;i++)for(var j=c;j<c+w;j++)if(occ[i*cols+j]){ok=false;break}
+    if(ok)return {r:r,c:c}}
+  return null}
+function firstCellOf(G,C,ci){for(var i=0;i<C.label.length;i++)if(C.label[i]===ci)return [Math.floor(i/G.cols),i%G.cols];return null}
+function placeOne(G,C,A,o){
+  var it=o.inst.item,D=G.c.D,s=cellsFor(it,G.p,S.clear,D),a=s[0],b=s[1],h=orient(it,D).h;
+  if(it.stack){var keys=Object.keys(A.occ);
+    for(var k=0;k<keys.length;k++){var ci=+keys[k],oc=A.occ[ci];
+      if(!oc.every(function(x){return x.inst.item.stack}))continue;
+      var tot=h;oc.forEach(function(x){tot+=orient(x.inst.item,D).h});
+      if(tot<=D+1e-6&&rectFits(G,C,ci,a,b)){S.anchor[o.inst.key]=firstCellOf(G,C,ci);return true}}}
+  var cols=G.cols,rows=G.rows,occ=new Uint8Array(cols*rows);
+  for(var i=0;i<occ.length;i++)if(A.occ[C.label[i]])occ[i]=1;
+  var opts=[[a,b]];if(a!==b)opts.push([b,a]);
+  var best=null;
+  opts.forEach(function(op){if(op[0]>cols||op[1]>rows)return;var f=findFree(occ,cols,rows,op[0],op[1]);
+    if(f&&(!best||f.r*cols+f.c<best.r*cols+best.c))best={r:f.r,c:f.c,w:op[0],h:op[1]}});
+  if(!best)return false;
+  for(var r=best.r+1;r<best.r+best.h;r++)for(var c=best.c;c<best.c+best.w;c++)S.h.delete(r+','+c);
+  for(var c2=best.c+1;c2<best.c+best.w;c2++)for(var r2=best.r;r2<best.r+best.h;r2++)S.v.delete(r2+','+c2);
+  for(var c3=best.c;c3<best.c+best.w;c3++){S.h.add(best.r+','+c3);S.h.add((best.r+best.h)+','+c3)}
+  for(var r3=best.r;r3<best.r+best.h;r3++){S.v.add(r3+','+best.c);S.v.add(r3+','+(best.c+best.w))}
+  S.anchor[o.inst.key]=[best.r,best.c];return true}
+function placeUnplaced(){
+  var guard=0,progress=true;
+  while(progress&&guard++<80){
+    progress=false;
+    var G=grid(),C=comps(G),A=analyse(G,C),todo=A.rows.filter(function(o){return o.ci<0});
+    todo.sort(function(x,y){var a=cellsFor(x.inst.item,G.p,S.clear,G.c.D),b=cellsFor(y.inst.item,G.p,S.clear,G.c.D);return b[0]*b[1]-a[0]*a[1]});
+    for(var t=0;t<todo.length&&!progress;t++)if(placeOne(G,C,A,todo[t]))progress=true}}
 function libToPlan(id){
   var g=LIB.filter(function(i){return i.id===id})[0];if(!g)return false;
   var ex=S.items.filter(function(i){return i.libId===id&&i.l===g.l&&i.w===g.w&&i.h===g.h&&!!i.stack===!!g.stack&&(i.wt||0)===(g.wt||0)})[0];
   if(ex)ex.qty=(ex.qty||1)+1;
   else{var it=mkItem(g.name||'Untitled',g.l,g.w,g.h,1,(S.items.length*47+20)%360,g.wt);it.stack=!!g.stack;it.libId=g.id;S.items.push(it)}
+  S.openItem=(ex||it).id;placeUnplaced();
   return true}
 function saveItemToLib(it){
   var g=it.libId&&LIB.filter(function(i){return i.id===it.libId})[0];
@@ -957,23 +1048,19 @@ function importCSV(text,mode){
   var added=0,updated=0;
   found.forEach(function(x){
     var o=x.o,ex=LIB.filter(function(i){return (i.name||'').toLowerCase()===o.name.toLowerCase()})[0];
-    if(ex){updated++;ex.l=o.l;ex.w=o.w;ex.h=o.h;if(x.has.cat&&o.cat)ex.cat=o.cat;if(x.has.wt)ex.wt=o.wt;if(x.has.stack)ex.stack=o.stack;if(x.has.notes)ex.notes=o.notes}
+    if(ex){var ch=Math.abs(ex.l-o.l)>1e-6||Math.abs(ex.w-o.w)>1e-6||Math.abs(ex.h-o.h)>1e-6||(x.has.cat&&o.cat&&ex.cat!==o.cat)||(x.has.wt&&Math.abs((ex.wt||0)-o.wt)>1e-6)||(x.has.stack&&!!ex.stack!==!!o.stack)||(x.has.notes&&(ex.notes||'')!==o.notes);if(ch)updated++;ex.l=o.l;ex.w=o.w;ex.h=o.h;if(x.has.cat&&o.cat)ex.cat=o.cat;if(x.has.wt)ex.wt=o.wt;if(x.has.stack)ex.stack=o.stack;if(x.has.notes)ex.notes=o.notes}
     else{added++;LIB.push({id:uid(),name:o.name,cat:o.cat||'Other',l:o.l,w:o.w,h:o.h,wt:o.wt||0,stack:!!o.stack,notes:o.notes||''})}});
+  var removed=0;
+  if(mode==='mirror'){var keep={};found.forEach(function(x){keep[x.o.name.toLowerCase()]=1});var n0=LIB.length;LIB=LIB.filter(function(i){return keep[(i.name||'').toLowerCase()]});removed=n0-LIB.length}
   saveLib();
-  return {added:added,updated:updated,skipped:skipped}}
+  return {added:added,updated:updated,removed:removed,skipped:skipped}}
 function flash(id,msg){var el=$(id);el.textContent=msg}
-function copyText(txt,ok,fail){
-  var fb=function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();var good=false;try{good=document.execCommand('copy')}catch(x){}ta.remove();good?ok():fail()};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(ok,fb);else fb()}
 $('#libExp').addEventListener('click',function(){
   if(!LIB.length){flash('#libMsg','The library is empty, so there is nothing to export.');return}
   try{var blob=new Blob(['﻿'+libTable(',')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='peli-gear-library.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1500);
-    flash('#libMsg','Exported '+LIB.length+' items to peli-gear-library.csv. If your browser blocked the download, use Copy for Excel and paste into a sheet.')}
-  catch(x){flash('#libMsg','The download did not start. Use Copy for Excel and paste into a sheet.')}});
-$('#libCopy').addEventListener('click',function(){
-  if(!LIB.length){flash('#libMsg','The library is empty, so there is nothing to copy.');return}
-  copyText(libTable('\t'),function(){flash('#libMsg','Copied '+LIB.length+' items. Paste into Excel or Google Sheets with Ctrl+V or Cmd+V.')},function(){flash('#libMsg','Copy was blocked by this browser. Use Export CSV instead.')})});
+    flash('#libMsg','Exported '+LIB.length+' items to peli-gear-library.csv. If nothing downloaded, your browser or viewer blocked it. Open the app from your own site to export.')}
+  catch(x){flash('#libMsg','The download did not start. Open the app from your own site to export.')}});
 $('#libImp').addEventListener('click',function(){var b=$('#libImpBox');b.hidden=!b.hidden;if(!b.hidden)$('#libFile').focus()});
 $('#libFile').addEventListener('change',function(e){
   var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();
@@ -991,6 +1078,57 @@ $('#libImpGo').addEventListener('click',function(){
   libQ='';libCat='';$('#libQ').value='';renderLibrary();drawLibSelect();
   msg.textContent='Added '+r.added+', updated '+r.updated+(r.skipped.length?', skipped '+r.skipped.length+' ('+r.skipped.slice(0,3).join('; ')+(r.skipped.length>3?'…':'')+')':'')+'.';
   $('#libImpTxt').value=''});
+/* Google Sheet sync */
+var SYNCKEY='peli-sync-v1',syncBusy=false;
+var SYNC=(function(){var o={url:'',auto:true,mirror:false,last:0,msg:'',stopped:false};
+  try{var j=JSON.parse(localStorage.getItem(SYNCKEY));if(j)for(var k in j)o[k]=j[k]}catch(e){}
+  if(!o.url&&!o.stopped&&DEFAULT_SYNC_URL)o.url=DEFAULT_SYNC_URL;return o})();
+function saveSync(){try{localStorage.setItem(SYNCKEY,JSON.stringify(SYNC))}catch(e){}}
+function syncCheckUrl(u){
+  if(!/^https:\/\//i.test(u)&&!/^http:\/\/(localhost|127\.0\.0\.1)/i.test(u))return 'The link must start with https://.';
+  if(/docs\.google\.com\/spreadsheets/i.test(u)&&!/output=csv|format=csv|tqx=out:csv/i.test(u))return 'That is not a published CSV link. In Google Sheets choose File > Share > Publish to web, pick the sheet tab, choose Comma-separated values (.csv), then copy the link.';
+  return ''}
+function renderSync(){
+  $('#syncUrl').value=SYNC.url||'';$('#syncAuto').checked=!!SYNC.auto;$('#syncMirror').checked=!!SYNC.mirror;
+  var pill=$('#syncPill');pill.hidden=!SYNC.url;pill.textContent=SYNC.auto?'On':'Manual';
+  var st=$('#syncStatus');st.textContent=SYNC.msg||'';st.hidden=!SYNC.msg}
+function syncNow(){
+  if(!SYNC.url||syncBusy)return;
+  var bad=syncCheckUrl(SYNC.url);if(bad){SYNC.msg=bad;renderSync();return}
+  syncBusy=true;SYNC.msg='Syncing…';renderSync();
+  var u=SYNC.url+(SYNC.url.indexOf('?')<0?'?':'&')+'_='+Date.now();
+  fetch(u,{cache:'no-store',credentials:'omit'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()})
+  .then(function(text){
+    if(/^\s*</.test(text))throw new Error('html');
+    var r=importCSV(text,SYNC.mirror?'mirror':'merge');
+    if(r.err){SYNC.msg='The sheet could not be used: '+r.err;return}
+    SYNC.last=Date.now();
+    var ch=[];if(r.added)ch.push(r.added+' added');if(r.updated)ch.push(r.updated+' updated');if(r.removed)ch.push(r.removed+' removed');
+    SYNC.msg='Synced at '+new Date(SYNC.last).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'. '+(ch.length?ch.join(', ')+'.':'No changes.')
+      +(r.skipped.length?' Skipped '+r.skipped.length+' row'+(r.skipped.length>1?'s':'')+' ('+r.skipped.slice(0,2).join('; ')+(r.skipped.length>2?'…':'')+').':'');
+    drawLibSelect();var ae=document.activeElement;
+    if(tab==='library'&&!(ae&&$('#libTable').contains(ae)))renderLibrary();else $('#libCount').textContent=LIB.length?'· '+LIB.length:'';
+  }).catch(function(e){
+    SYNC.msg=e&&e.message==='html'?'The link returned a web page instead of CSV. Check that the sheet is published as CSV, not just shared.'
+      :'Could not reach the sheet ('+((e&&e.message)||'network error')+'). Check the link and your connection. Some viewers, including the claude.ai preview, block requests to other sites.'})
+  .then(function(){syncBusy=false;saveSync();renderSync()})}
+$('#syncGo').addEventListener('click',function(){
+  SYNC.url=$('#syncUrl').value.trim();SYNC.stopped=false;saveSync();
+  if(!SYNC.url){SYNC.msg='Paste the published CSV link first.';renderSync();return}
+  syncNow()});
+$('#syncUrl').addEventListener('keydown',function(e){if(e.key==='Enter')$('#syncGo').click()});
+$('#syncStop').addEventListener('click',function(){SYNC.url='';SYNC.stopped=true;SYNC.msg='Sync stopped. Your library keeps its current items.';saveSync();renderSync()});
+$('#syncAuto').addEventListener('change',function(e){SYNC.auto=e.target.checked;saveSync();renderSync()});
+$('#syncMirror').addEventListener('change',function(e){SYNC.mirror=e.target.checked;saveSync()});
+setInterval(function(){if(SYNC.auto&&SYNC.url&&!document.hidden)syncNow()},300000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&SYNC.auto&&SYNC.url&&Date.now()-SYNC.last>120000)syncNow()});
+/* detail panels */
+function showPanel(n){
+  S.panel=n;['check','weight','cuts','find'].forEach(function(k){$('#p'+k.charAt(0).toUpperCase()+k.slice(1)).hidden=k!==n});
+  document.querySelectorAll('[data-panel]').forEach(function(b){b.setAttribute('aria-selected',b.dataset.panel===n)});save()}
+document.querySelectorAll('[data-panel]').forEach(function(b){b.addEventListener('click',function(){showPanel(b.dataset.panel)})});
+$('#ioMenu').addEventListener('click',function(e){if(e.target.tagName==='BUTTON')this.open=false});
+document.addEventListener('click',function(e){var m=$('#ioMenu');if(m.open&&!m.contains(e.target))m.open=false});
 /* tabs */
 function route(){
   tab=location.hash==='#library'?'library':'planner';
@@ -1024,8 +1162,8 @@ $('#caseSel').addEventListener('change',function(e){setCase(e.target.value)});
 $('#pitchSel').addEventListener('change',function(e){if(e.target.value==='cur')return;S.pitch=PITCHES[S.unit][+e.target.value][0];autoLayout();fullRender()});
 $('#clearSel').addEventListener('change',function(e){if(e.target.value==='cur')return;S.clear=CLEARS[S.unit][+e.target.value][0];autoLayout();fullRender()});
 function setUnit(u){S.unit=u;fullRender();if(tab==='library')renderLibrary()}
-['#uIn','#uIn2'].forEach(function(q){$(q).addEventListener('click',function(){setUnit('in')})});
-['#uMm','#uMm2'].forEach(function(q){$(q).addEventListener('click',function(){setUnit('mm')})});
+$('#uIn').addEventListener('click',function(){setUnit('in')});
+$('#uMm').addEventListener('click',function(){setUnit('mm')});
 document.querySelectorAll('[data-mode]').forEach(function(b){b.addEventListener('click',function(){S.mode=b.dataset.mode;drawControls();refresh()})});
 $('#auto').addEventListener('click',function(){autoLayout();refresh()});
 $('#clear').addEventListener('click',function(){S.h=new Set();S.v=new Set();S.anchor={};S.sel=null;refresh()});
@@ -1040,28 +1178,27 @@ $('#copy').addEventListener('click',function(){
   var fallback=function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){btn.textContent='Copy failed'}ta.remove()};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fallback);else fallback()});
 $('#addPreset').addEventListener('click',function(){if(libToPlan($('#presetSel').value)){drawItems();refresh()}});
-$('#addBlank').addEventListener('click',function(){S.items.push(mkItem('New item',4,3,2,1,(S.items.length*47+20)%360));drawItems();refresh()});
+$('#addBlank').addEventListener('click',function(){var it=mkItem('New item',4,3,2,1,(S.items.length*47+20)%360);S.items.push(it);S.openItem=it.id;placeUnplaced();drawItems();refresh()});
 $('#items').addEventListener('input',function(e){
   var f=e.target.dataset.f;if(!f)return;var id=e.target.closest('.item').dataset.id,it=S.items.filter(function(i){return i.id===id})[0];if(!it)return;
   if(f==='stack'){it.stack=e.target.checked}
   else if(f==='name')it.name=e.target.value;
   else if(f==='wt'){var wv=parseFloat(e.target.value);it.wt=wv>=0?wundisp(wv):0}
-  else{var v=parseFloat(e.target.value);if(!(v>0))return;it[f]=f==='qty'?Math.max(1,Math.round(v)):undisp(v);if(f==='qty')document.querySelector('#gearCount').textContent='· '+instances().length+' pieces'}
-  refresh()});
+  else{var v=parseFloat(e.target.value);if(!(v>0))return;it[f]=f==='qty'?Math.max(1,Math.round(v)):undisp(v);if(f==='qty'){document.querySelector('#gearCount').textContent='· '+instances().length+' pieces';placeUnplaced()}}
+  updateItemHead(it);refresh()});
 $('#items').addEventListener('click',function(e){
+  var tg=e.target.closest&&e.target.closest('[data-toggle]');
+  if(tg){var tid=tg.dataset.toggle;S.openItem=S.openItem===tid?null:tid;if(S.openItem)S.selKey=tid+'#0';drawItems();refresh();return}
   var act=e.target.dataset&&e.target.dataset.act;
   if(act){var it=S.items.filter(function(i){return i.id===e.target.dataset.id})[0];if(!it)return;
     if(act==='savelib'){saveItemToLib(it);drawItems();return}
     turnItem(it,act);drawItems();refresh();return}
   var id=e.target.dataset&&e.target.dataset.del;if(!id)return;
-  S.items=S.items.filter(function(i){return i.id!==id});drawItems();refresh()});
-$('#selBody').addEventListener('click',function(e){
-  var un=e.target.dataset&&e.target.dataset.un;if(un){delete S.anchor[un];refresh();return}
-  if(e.target.id==='assignBtn'){var k=$('#assignSel').value;if(k&&S.sel){S.anchor[k]=[S.sel.r,S.sel.c];refresh()}}});
+  if(S.openItem===id)S.openItem=null;S.items=S.items.filter(function(i){return i.id!==id});drawItems();refresh()});
 $('#moveBar').addEventListener('click',function(e){var t=e.target.dataset&&e.target.dataset.turn;if(t)turnSelected(t)});
 $('#finder').addEventListener('click',function(e){var id=e.target.dataset&&e.target.dataset.case;if(id)setCase(id)});
 
-fullRender();route();
+fullRender();showPanel(S.panel||'check');route();renderSync();if(SYNC.url&&SYNC.auto)setTimeout(syncNow,800);
 })();
 </script>
 </body>
