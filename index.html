@@ -116,6 +116,17 @@ header.top .seg{margin-bottom:8px;margin-left:auto}
 .menu summary::-webkit-details-marker{display:none}
 .menuitems{position:absolute;right:0;top:calc(100% + 4px);z-index:5;display:flex;flex-direction:column;gap:4px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:8px;min-width:170px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
 .menuitems .btn{text-align:left}
+.planpanel{width:min(360px,86vw);gap:10px;padding:12px}
+.planpanel .row{gap:6px}
+.planpanel .btn.sm{text-align:center}
+#planBtn b{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
+.plist{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;text-align:left;color:inherit}
+.prow:hover{border-color:var(--accent)}
+.prow.cur{border-color:var(--accent);background:var(--accent-soft)}
+.prow .pn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.prow .pm{color:var(--muted);font-size:11px;white-space:nowrap}
+@media(max-width:700px){.menuitems.planpanel{position:fixed;left:16px;right:16px;top:72px;width:auto;max-height:calc(100vh - 88px);overflow:auto}}
 @media(max-width:920px){.rail{order:2}header.top .seg{margin-left:0}}
 .tabs button{border:0;background:transparent;padding:9px 16px;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px}
 .tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
@@ -248,7 +259,20 @@ td.why{white-space:normal;color:var(--muted);min-width:180px}
             <div class="grp">
               <button class="btn primary" id="auto">Auto-arrange gear</button>
               <button class="btn" id="clear">Clear dividers</button>
-              <button class="btn" id="copy">Copy plan</button>
+              <details class="menu" id="planMenu"><summary class="btn" id="planBtn">Plan: <b id="planName">Plan 1</b></summary>
+                <div class="menuitems planpanel">
+                  <label class="field"><span>Plan name</span><input type="text" id="planNameIn" maxlength="60" autocomplete="off"></label>
+                  <div class="plist" id="planList"></div>
+                  <div class="row"><button class="btn sm" id="planNew">New plan</button><button class="btn sm" id="planDup">Save as copy</button><button class="btn sm danger" id="planDel">Delete plan</button></div>
+                  <div class="row"><button class="btn sm" id="planExp">Export plan</button><button class="btn sm" id="planExpAll">Export all</button><button class="btn sm" id="planImp">Import</button><button class="btn sm" id="planCopy">Copy summary</button></div>
+                  <div id="planImpBox" hidden style="display:flex;flex-direction:column;gap:8px">
+                    <input type="file" id="planFile" accept=".json,application/json,text/plain" aria-label="Choose a plan file">
+                    <textarea id="planImpTxt" rows="4" placeholder="Or paste exported plan text here" aria-label="Plan text"></textarea>
+                    <button class="btn sm primary" id="planImpGo">Import plans</button>
+                  </div>
+                  <p class="hint" id="planMsg" role="status" style="margin:0">Changes save to the current plan automatically.</p>
+                </div>
+              </details>
             </div>
           </div>
           <svg id="cv" role="img" tabindex="0" aria-label="Top-down view of the case interior with divider runs"></svg>
@@ -384,7 +408,8 @@ function load(){
     j.h=new Set(j.h||[]);j.v=new Set(j.v||[]);j.anchor=j.anchor||{};
     if(!CASES.some(function(c){return c.id===j.caseId}))return null;return j}catch(e){return null}
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},S,{h:Array.from(S.h),v:Array.from(S.v)})))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(Object.assign({},S,{h:Array.from(S.h),v:Array.from(S.v)})))}catch(e){}
+  if(typeof savePlans==='function')savePlans()}
 
 /* ---------- geometry ---------- */
 function caseById(id){return CASES.filter(function(c){return c.id===id})[0]}
@@ -1078,6 +1103,97 @@ $('#libImpGo').addEventListener('click',function(){
   libQ='';libCat='';$('#libQ').value='';renderLibrary();drawLibSelect();
   msg.textContent='Added '+r.added+', updated '+r.updated+(r.skipped.length?', skipped '+r.skipped.length+' ('+r.skipped.slice(0,3).join('; ')+(r.skipped.length>3?'…':'')+')':'')+'.';
   $('#libImpTxt').value=''});
+/* ---------- plans: several saved layouts ---------- */
+var PLANKEY='peli-plans-v1';
+function snapshot(){return JSON.parse(JSON.stringify({caseId:S.caseId,pitch:S.pitch,clear:S.clear,items:S.items,h:Array.from(S.h),v:Array.from(S.v),anchor:S.anchor,caseWt:S.caseWt||0,caseWtCustom:!!S.caseWtCustom,limit:S.limit||0}))}
+function applySnapshot(sn){
+  S.caseId=sn.caseId;S.pitch=sn.pitch;S.clear=sn.clear;S.items=sn.items;S.h=new Set(sn.h);S.v=new Set(sn.v);S.anchor=sn.anchor||{};
+  S.caseWt=sn.caseWt||0;S.caseWtCustom=!!sn.caseWtCustom;S.limit=sn.limit||0;if(!S.caseWtCustom)S.caseWt=caseById(S.caseId).wt;
+  S.sel=null;S.selKey=null;S.openItem=null}
+var PLANS=(function(){
+  var o=null;try{o=JSON.parse(localStorage.getItem(PLANKEY))}catch(e){}
+  if(!o||!Array.isArray(o.plans)||!o.plans.length)o={cur:null,plans:[]};
+  if(!o.plans.some(function(p){return p.id===o.cur&&p.state})){var p={id:uid(),name:'Plan 1',updated:Date.now(),state:null};o.plans.unshift(p);o.cur=p.id}
+  o.plans=o.plans.filter(function(p){return p.state||p.id===o.cur});return o})();
+function curPlan(){return PLANS.plans.filter(function(p){return p.id===PLANS.cur})[0]}
+function savePlans(){var p=curPlan();if(p){p.state=snapshot();p.updated=Date.now()}try{localStorage.setItem(PLANKEY,JSON.stringify(PLANS))}catch(e){}}
+function uniqueName(base){var names={};PLANS.plans.forEach(function(p){names[p.name]=1});if(!names[base])return base;
+  for(var i=2;i<1000;i++)if(!names[base+' '+i])return base+' '+i;return base+' x'}
+function pieceCount(st){return (st.items||[]).reduce(function(t,i){return t+(i.qty||1)},0)}
+function renderPlanList(){
+  var p=curPlan();$('#planName').textContent=p.name;
+  $('#planList').innerHTML=PLANS.plans.map(function(x){var st=x.state||snapshot();
+    return '<button class="prow'+(x.id===PLANS.cur?' cur':'')+'" data-plan="'+x.id+'"><span class="pn">'+esc(x.name)+'</span><span class="pm mono">'+st.caseId+' · '+pieceCount(st)+' pcs</span></button>'}).join('');
+  $('#planDel').disabled=PLANS.plans.length<2}
+function renderPlans(){$('#planNameIn').value=curPlan().name;renderPlanList()}
+function loadPlanState(p){applySnapshot(JSON.parse(JSON.stringify(p.state)));fullRender();savePlans();renderPlans()}
+function switchPlan(id){if(id===PLANS.cur)return;savePlans();var p=PLANS.plans.filter(function(x){return x.id===id})[0];if(!p||!p.state)return;PLANS.cur=id;loadPlanState(p)}
+function newPlan(){
+  savePlans();
+  var p={id:uid(),name:uniqueName('New plan'),updated:Date.now(),state:{caseId:S.caseId,pitch:S.pitch,clear:S.clear,items:[],h:[],v:[],anchor:{},caseWt:0,caseWtCustom:false,limit:S.limit||0}};
+  PLANS.plans.push(p);PLANS.cur=p.id;loadPlanState(p)}
+function dupPlan(){
+  savePlans();var c=curPlan();
+  var p={id:uid(),name:uniqueName(c.name+' copy'),updated:Date.now(),state:JSON.parse(JSON.stringify(c.state))};
+  PLANS.plans.push(p);PLANS.cur=p.id;loadPlanState(p)}
+var planDelArm=false,planDelTimer=null;
+function delPlan(){
+  if(PLANS.plans.length<2)return;
+  var b=$('#planDel');
+  if(!planDelArm){planDelArm=true;b.textContent='Confirm delete';clearTimeout(planDelTimer);planDelTimer=setTimeout(function(){planDelArm=false;b.textContent='Delete plan'},3000);return}
+  planDelArm=false;b.textContent='Delete plan';
+  var i=PLANS.plans.findIndex?PLANS.plans.findIndex(function(p){return p.id===PLANS.cur}):0;
+  PLANS.plans.splice(i,1);var n=PLANS.plans[Math.max(0,i-1)];PLANS.cur=n.id;loadPlanState(n);flash('#planMsg','Plan deleted.')}
+function slug(t){return String(t).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'plan'}
+function planFileText(plans){return JSON.stringify({format:'peli-plan',version:1,exported:new Date().toISOString(),plans:plans.map(function(p){return {name:p.name,state:p.state}})},null,1)}
+function downloadPlan(fn,text,ok){
+  try{var blob=new Blob([text],{type:'application/json'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1500);
+    flash('#planMsg',ok+' If nothing downloaded, your browser or viewer blocked it. Open the app from your own site to export.')}
+  catch(x){flash('#planMsg','The download did not start. Open the app from your own site to export.')}}
+function cleanState(st){
+  if(!st||typeof st!=='object')return null;
+  var cid=CASES.some(function(c){return c.id===st.caseId})?st.caseId:S.caseId,idMap={},items=[];
+  (Array.isArray(st.items)?st.items:[]).forEach(function(it){
+    if(!it||!(+it.l>0)||!(+it.w>0)||!(+it.h>0))return;
+    var n=mkItem(String(it.name||'Item').slice(0,80),+it.l,+it.w,+it.h,Math.max(1,Math.round(+it.qty)||1),isFinite(+it.hue)?+it.hue:(items.length*47+20)%360,+it.wt>0?+it.wt:0);
+    n.stack=!!it.stack;n.auto=!!it.auto;
+    if(Array.isArray(it.ori)&&it.ori.length===3&&PERMS.some(function(q){return q.join()===it.ori.map(Number).join()}))n.ori=it.ori.map(Number);
+    idMap[it.id]=n.id;items.push(n)});
+  var re=/^\d+,\d+$/,edges=function(a){return (Array.isArray(a)?a:[]).filter(function(x){return typeof x==='string'&&re.test(x)})};
+  var anchor={};Object.keys(st.anchor||{}).forEach(function(k){var m=k.split('#'),a=st.anchor[k];
+    if(idMap[m[0]]&&Array.isArray(a)&&Number.isInteger(a[0])&&Number.isInteger(a[1])&&a[0]>=0&&a[1]>=0)anchor[idMap[m[0]]+'#'+m[1]]=[a[0],a[1]]});
+  return {caseId:cid,pitch:+st.pitch>0.05&&+st.pitch<3?+st.pitch:S.pitch,clear:+st.clear>=0&&+st.clear<3?+st.clear:S.clear,
+    items:items,h:edges(st.h),v:edges(st.v),anchor:anchor,caseWt:+st.caseWt>0?+st.caseWt:0,caseWtCustom:!!st.caseWtCustom,limit:+st.limit>0?+st.limit:0}}
+function importPlans(text){
+  var j;try{j=JSON.parse(text)}catch(e){return {err:'That is not a plan file. Paste or choose a file made with Export plan.'}}
+  var list=Array.isArray(j&&j.plans)?j.plans:(j&&j.state?[j]:(j&&j.items?[{name:'Imported plan',state:j}]:[]));
+  var added=0;
+  list.forEach(function(x){var st=cleanState(x&&x.state);if(!st)return;
+    PLANS.plans.push({id:uid(),name:uniqueName(String((x&&x.name)||'Imported plan').slice(0,60)),updated:Date.now(),state:st});added++});
+  if(!added)return {err:'No plans found in that text.'};
+  return {added:added}}
+$('#planMenu').addEventListener('toggle',function(){if(this.open)renderPlans()});
+$('#planNameIn').addEventListener('input',function(e){var p=curPlan();p.name=e.target.value.slice(0,60)||'Untitled plan';savePlans();renderPlanList()});
+$('#planList').addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-plan]');if(b){switchPlan(b.dataset.plan);$('#planMenu').open=false}});
+$('#planNew').addEventListener('click',function(){newPlan();$('#planMenu').open=false});
+$('#planDup').addEventListener('click',function(){dupPlan();$('#planMenu').open=false});
+$('#planDel').addEventListener('click',delPlan);
+$('#planExp').addEventListener('click',function(){savePlans();var p=curPlan();downloadPlan('peli-plan-'+slug(p.name)+'.json',planFileText([p]),'Exported "'+p.name+'".')});
+$('#planExpAll').addEventListener('click',function(){savePlans();downloadPlan('peli-plans.json',planFileText(PLANS.plans),'Exported '+PLANS.plans.length+' plan'+(PLANS.plans.length>1?'s':'')+'.')});
+$('#planImp').addEventListener('click',function(){var b=$('#planImpBox');b.hidden=!b.hidden;if(!b.hidden)$('#planFile').focus()});
+$('#planFile').addEventListener('change',function(e){var f=e.target.files&&e.target.files[0];if(!f)return;var rd=new FileReader();
+  rd.onload=function(){$('#planImpTxt').value=String(rd.result||'');flash('#planMsg','Loaded '+f.name+'. Choose Import plans to add it.')};
+  rd.onerror=function(){flash('#planMsg','That file could not be read.')};rd.readAsText(f)});
+$('#planImpGo').addEventListener('click',function(){
+  var t=$('#planImpTxt').value;if(!t.trim()){flash('#planMsg','Choose a file or paste plan text first.');return}
+  var r=importPlans(t);if(r.err){flash('#planMsg',r.err);return}
+  savePlans();$('#planImpTxt').value='';$('#planImpBox').hidden=true;renderPlans();
+  flash('#planMsg','Imported '+r.added+' plan'+(r.added>1?'s':'')+'. Choose one from the list to open it.')});
+$('#planCopy').addEventListener('click',function(){
+  var txt=planText(),btn=$('#planCopy'),done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy summary'},1400)};
+  var fb=function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();var ok=false;try{ok=document.execCommand('copy')}catch(x){}ta.remove();if(ok)done();else flash('#planMsg','Copy was blocked by this browser.')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fb);else fb()});
 /* Google Sheet sync */
 var SYNCKEY='peli-sync-v1',syncBusy=false;
 var SYNC=(function(){var o={url:'',auto:true,mirror:false,last:0,msg:'',stopped:false};
@@ -1128,7 +1244,7 @@ function showPanel(n){
   document.querySelectorAll('[data-panel]').forEach(function(b){b.setAttribute('aria-selected',b.dataset.panel===n)});save()}
 document.querySelectorAll('[data-panel]').forEach(function(b){b.addEventListener('click',function(){showPanel(b.dataset.panel)})});
 $('#ioMenu').addEventListener('click',function(e){if(e.target.tagName==='BUTTON')this.open=false});
-document.addEventListener('click',function(e){var m=$('#ioMenu');if(m.open&&!m.contains(e.target))m.open=false});
+document.addEventListener('click',function(e){document.querySelectorAll('details.menu[open]').forEach(function(m){if(!m.contains(e.target))m.open=false})});
 /* tabs */
 function route(){
   tab=location.hash==='#library'?'library':'planner';
@@ -1173,10 +1289,6 @@ $('#limSel').addEventListener('change',function(e){var v=e.target.value;if(v==='
 $('#limIn').addEventListener('input',function(e){var x=parseFloat(e.target.value);S.limit=x>0?wundisp(x):0;
   var m=[0,7,10,23,32].filter(function(q){return Math.abs(q-S.limit)<.01})[0];$('#limSel').value=m===undefined?'custom':String(m);refresh()});
 $('#onlyFit').addEventListener('change',function(e){S.onlyFit=e.target.checked;refresh()});
-$('#copy').addEventListener('click',function(){
-  var btn=$('#copy'),txt=planText(),done=function(){btn.textContent='Copied';setTimeout(function(){btn.textContent='Copy plan'},1400)};
-  var fallback=function(){var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){btn.textContent='Copy failed'}ta.remove()};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fallback);else fallback()});
 $('#addPreset').addEventListener('click',function(){if(libToPlan($('#presetSel').value)){drawItems();refresh()}});
 $('#addBlank').addEventListener('click',function(){var it=mkItem('New item',4,3,2,1,(S.items.length*47+20)%360);S.items.push(it);S.openItem=it.id;placeUnplaced();drawItems();refresh()});
 $('#items').addEventListener('input',function(e){
@@ -1198,7 +1310,7 @@ $('#items').addEventListener('click',function(e){
 $('#moveBar').addEventListener('click',function(e){var t=e.target.dataset&&e.target.dataset.turn;if(t)turnSelected(t)});
 $('#finder').addEventListener('click',function(e){var id=e.target.dataset&&e.target.dataset.case;if(id)setCase(id)});
 
-fullRender();showPanel(S.panel||'check');route();renderSync();if(SYNC.url&&SYNC.auto)setTimeout(syncNow,800);
+fullRender();showPanel(S.panel||'check');route();renderSync();renderPlans();if(SYNC.url&&SYNC.auto)setTimeout(syncNow,800);
 })();
 </script>
 </body>
