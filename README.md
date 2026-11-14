@@ -4,23 +4,6 @@ A single-page planner for laying out Pelican case TrekPak dividers. Pick a case,
 
 No build step and no dependencies. It is one `index.html` plus a favicon. Fonts load from Google Fonts and fall back to system fonts if blocked.
 
-## Publish on GitHub Pages
-
-1. Create a new GitHub repository (public, or private if your plan supports Pages on private repos).
-2. Upload everything in this folder to the repository root: `index.html`, `favicon.svg`, `.nojekyll`, `README.md`.
-3. In the repository go to **Settings > Pages**.
-4. Under **Build and deployment**, set **Source** to **Deploy from a branch**, choose **main** and **/ (root)**, then Save.
-5. After a minute the site is live at `https://<your-username>.github.io/<repo-name>/`.
-
-With the GitHub CLI:
-
-```bash
-git init -b main
-git add .
-git commit -m "Peli Planner"
-gh repo create peli-planner --public --source=. --push
-gh api -X POST repos/:owner/peli-planner/pages -f "source[branch]=main" -f "source[path]=/"
-```
 
 ## Live sync from a Google Sheet
 
